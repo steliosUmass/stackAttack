@@ -62,8 +62,8 @@ class Memory():
         '''
         # len( bin( self.line_length - 1 ) ) gets offset bits
         # -2 to get rid of 0b chars 
-        index_mask_shift = len( bin( self.line_length - 1 ) ) - 2
-        index_mask = len( bin( len( self.mem ) - 1  ) ) - 2 << index_mask_shift
+        index_mask_shift = self.line_length.bit_length()
+        index_mask = len( self.mem ).bit_length() << index_mask_shift
         index = self.address & index_mask 
 
         # get rid of index and offset
