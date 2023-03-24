@@ -55,20 +55,38 @@ class Memory():
         if next_layer is not None:
             self.valid =  [ False ] * num_lines 
             self.tag = [ 0 ] * num_lines 
+        
+            # if we are cache, get total memory space from next layer
+            self.total_mem_space = next_layer.total_mem_space
+        
+        # for ram, use its current size
+        else:
+            self.total_mem_space = line_length * num_lines
 
-    def _calc_index_and_tag( self ):
+
+    def _calc_index_and_tag( self, address ):
         '''
         Internal method used to compute tag and index integer values for cache
         '''
-        # len( bin( self.line_length - 1 ) ) gets offset bits
-        # -2 to get rid of 0b chars 
-        index_mask_shift = self.line_length.bit_length()
-        index_mask = len( self.mem ).bit_length() << index_mask_shift
-        index = self.address & index_mask 
+        index_mask_shift = ( self.line_length - 1 ).bit_length()
+        memory_bit_length = ( len( self.mem ) - 1 ).bit_length() 
+        index_mask = 2**memory_bit_length - 1 << index_mask_shift
+        index = address & index_mask 
+        
+        # shift result back
+        index = index >> index_mask_shift
 
-        # get rid of index and offset
-        tag_mask = ( 2**16 ) - 1 ^ ( 2**index_mask_shift - 1 + index_mask )
-        tag = self.address & tag_mask
+        # calc tag
+
+        # this value is bit 1 where index and offset are supposed to be 
+        index_offset_mask = 2**index_mask_shift - 1 + index_mask
+
+        # this value is bit 1 where tag is, and 0 where index and offset are
+        tag_mask = ( 2**16 ) - 1 ^ index_offset_mask
+        tag = address & tag_mask
+
+        # shift result
+        tag = tag >> index_offset_mask.bit_length()
 
         return tag, index
 
@@ -95,7 +113,7 @@ class Memory():
         '''
 
         if self.state == MemoryState.IDLE:
-            if address > len( self.mem ) * self.line_length:
+            if address > self.total_mem_space:
                 raise NotImplementedError
             self.access_counter = self.response_cycles - 1
             self.access_stage = stage
@@ -107,7 +125,7 @@ class Memory():
                 # if the next layer is not none, than this is cache
                 # check to see if we have it
                 if self.next_layer is not None:
-                    tag, index = self._calc_index_and_tag()
+                    tag, index = self._calc_index_and_tag( address )
 
                     # check if hit
                     if self.valid[ index ] and self.tag[ index ] == tag:
@@ -162,7 +180,7 @@ class Memory():
         '''
 
         if self.state == MemoryState.IDLE:
-            if address > len( self.mem ) * self.line_length:
+            if address > self.total_mem_space:
                 raise NotImplementedError
             # sub 1 in order for correct cycles 
             self.access_counter = self.response_cycles - 1
@@ -177,9 +195,12 @@ class Memory():
                 
                 if self.next_layer is not None:
                     # first invalid cache if it exists
-                    _, index = self._calc_index_and_tag()
+                    _, index = self._calc_index_and_tag( address )
                     self.valid[ index ] = False 
-                    return self.next_layer.write( address, value, stage )
+                    status = self.next_layer.write( address, value, stage )
+                    if status == MemoryState.IDLE:
+                        self.state = MemoryState.IDLE
+                    return status
                 
                 else:
                     # else we are in ram, so get the value
@@ -192,7 +213,8 @@ class Memory():
         return self.state
 
 if __name__ == '__main__':
-
+    
+    from tabulate import tabulate
     cycles = 1
     m = Memory( 1000, reponse_cycles=3 )
     c = Memory( 16, reponse_cycles=0, next_layer=m )
@@ -203,27 +225,45 @@ if __name__ == '__main__':
         action = action.split()
         read_val = None
         write_val = None
-        if len( action ) > 0 and current_action is None:
-            current_action = action
-
-        if current_action is not None:    
-            if current_action[ 0 ] == 'READ':
-                read_val = c.read( int( current_action[ 1 ] ),  Users.USER1 )
-                
-            elif current_action[ 0 ] == 'WRITE':
-                write_val = c.write( int( current_action[ 1 ] ) , int( current_action[ 2 ] ).to_bytes( 4, 'big' ), Users.USER1 )
-
-        print('-'*20 + 'Cycle {}'.format( cycles ) + '-'*20 )
        
-        if current_action and current_action[ 0 ] == 'READ':
-            print('READ val {}'.format( read_val ) )
+        # implement view command 
+        if len( action ) > 0 and action[ 0 ] == 'VIEW':
+            memory = action[ 1 ]
+            mem_index = int( action[ 2 ] ) // 4
             
-            if read_val != MemoryState.BUSY:
-                current_action = None
+            if memory == 'CACHE':
+                row = [ mem_index, bin( c.tag[ mem_index ] ), c.mem[ mem_index ] , '1' if c.valid[ mem_index ] else '0' ]
+                table = [ [ 'INDEX', 'TAG', 'INDEX', 'VALID' ], row ]
 
-        elif current_action:
-            print('WRITE val {}'.format( write_val ) )
-            if write_val != MemoryState.BUSY:
-                current_action = None
-        
-        cycles += 1 
+            elif memory == 'RAM':
+                row = [ mem_index, m.mem[ mem_index ] ]
+                table = [ [ 'INDEX', 'VALUE' ], row ]
+
+            print(tabulate(table, headers='firstrow', tablefmt='fancy_grid'))
+
+	# else continue simulation
+        else:
+            if len( action ) > 0 and current_action is None:
+                current_action = action
+
+            if current_action is not None:    
+                if current_action[ 0 ] == 'READ':
+                    read_val = c.read( int( current_action[ 1 ] ),  Users.USER1 )
+                    
+                elif current_action[ 0 ] == 'WRITE':
+                    write_val = c.write( int( current_action[ 1 ] ) , int( current_action[ 2 ] ).to_bytes( 4, 'big' ), Users.USER1 )
+
+            print('-'*20 + 'Cycle {}'.format( cycles ) + '-'*20 )
+       
+            if current_action and current_action[ 0 ] == 'READ':
+                print('READ val {}'.format( read_val ) )
+                
+                if read_val != MemoryState.BUSY:
+                    current_action = None
+
+            elif current_action:
+                print('WRITE val {}'.format( write_val ) )
+                if write_val != MemoryState.BUSY:
+                    current_action = None
+            
+            cycles += 1 
