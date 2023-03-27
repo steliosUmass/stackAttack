@@ -194,9 +194,10 @@ class Memory():
                 # we want to write to ram so call write to next layer
                 
                 if self.next_layer is not None:
-                    # first invalid cache if it exists
-                    _, index = self._calc_index_and_tag( address )
-                    self.valid[ index ] = False 
+                    tag, index = self._calc_index_and_tag( address )
+                    if self.tag[ index ] == tag:
+                        self.valid = False
+
                     status = self.next_layer.write( address, value, stage )
                     if status == MemoryState.IDLE:
                         self.state = MemoryState.IDLE
@@ -221,6 +222,7 @@ if __name__ == '__main__':
 
     current_action = None
     while True:
+        print('-'*20 + 'Cycle {}'.format( cycles ) + '-'*20 )
         action = input()
         action = action.split()
         read_val = None
@@ -253,8 +255,7 @@ if __name__ == '__main__':
                 elif current_action[ 0 ] == 'WRITE':
                     write_val = c.write( int( current_action[ 1 ] ) , int( current_action[ 2 ] ).to_bytes( 4, 'big' ), Users.USER1 )
 
-            print('-'*20 + 'Cycle {}'.format( cycles ) + '-'*20 )
-       
+                   
             if current_action and current_action[ 0 ] == 'READ':
                 print('READ val {}'.format( read_val ) )
                 
