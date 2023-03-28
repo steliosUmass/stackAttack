@@ -1,4 +1,5 @@
 from enum import Enum
+import copy
 
 class MemoryState( Enum ):
     IDLE = 1 
@@ -9,8 +10,7 @@ class Users( Enum ):
 
 class Memory():
     """
-    Used to simulate cache or RAM
-    
+    Used to simulate cache or RAM 
     num_lines : int
         number of lines this memory holds
     line_length : int
@@ -148,7 +148,7 @@ class Memory():
                 else:
                     # else we are in ram, so get the value
                     self.state = MemoryState.IDLE
-                    return self.mem[ address // self.line_length ]
+                    return copy.deepcopy( self.mem[ address // self.line_length ] )
             else:
                 self.access_counter -= 1
         return self.state
@@ -189,25 +189,25 @@ class Memory():
             self.state = MemoryState.BUSY
 
         if stage == self.access_stage and address == self.address:
-            if self.access_counter < 1:
-                # if the next layer is not none, than this is cache
-                # we want to write to ram so call write to next layer
-                
-                if self.next_layer is not None:
+            # if the next layer is not none, than this is cache
+            # we want to write to ram so call write to next layer
+            if self.next_layer is not None:
+                status = self.next_layer.write( address, value, stage )
+                if status == MemoryState.IDLE:
+                    self.state = MemoryState.IDLE
+                    
                     tag, index = self._calc_index_and_tag( address )
                     if self.tag[ index ] == tag:
-                        self.valid = False
-
-                    status = self.next_layer.write( address, value, stage )
-                    if status == MemoryState.IDLE:
-                        self.state = MemoryState.IDLE
-                    return status
+                        self.valid[ index ] = False
                 
-                else:
-                    # else we are in ram, so get the value
-                    self.mem[ address // 4 ][ address % 4 ] = value
-                    self.state = MemoryState.IDLE
-                    return self.state
+                return status
+            
+            # else we are in ram, so write the value
+            elif self.access_counter < 1:
+                self.mem[ address // 4 ][ address % 4 ] = value
+                self.state = MemoryState.IDLE
+                return self.state
+            
             else:
                 self.access_counter -= 1
         
@@ -231,17 +231,18 @@ if __name__ == '__main__':
         # implement view command 
         if len( action ) > 0 and action[ 0 ] == 'VIEW':
             memory = action[ 1 ]
-            mem_index = int( action[ 2 ] ) // 4
-            
             if memory == 'CACHE':
-                row = [ mem_index, bin( c.tag[ mem_index ] ), c.mem[ mem_index ] , '1' if c.valid[ mem_index ] else '0' ]
-                table = [ [ 'INDEX', 'TAG', 'INDEX', 'VALID' ], row ]
+                rows = []
+                for i, row in enumerate( c.mem ):
+                    rows.append( [ i , bin( c.tag[ i ] ), row , '1' if c.valid[ i ] else '0' ] )
+                table = [ [ 'INDEX', 'TAG', 'VALUE', 'VALID' ] ] + rows 
 
             elif memory == 'RAM':
+                mem_index = int( action[ 2 ] ) // m.line_length
                 row = [ mem_index, m.mem[ mem_index ] ]
                 table = [ [ 'INDEX', 'VALUE' ], row ]
 
-            print(tabulate(table, headers='firstrow', tablefmt='fancy_grid'))
+            print(tabulate(table, headers='firstrow'))
 
 	# else continue simulation
         else:
