@@ -131,7 +131,7 @@ class Memory():
                     if self.valid[ index ] and self.tag[ index ] == tag:
                         # hit
                         self.state = MemoryState.IDLE
-                        return self.mem[ index ]
+                        return copy.deepcopy( self.mem[ index ] )
                     
                     # else miss
                     val = self.next_layer.read( address, self.access_stage )
