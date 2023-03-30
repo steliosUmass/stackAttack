@@ -6,7 +6,8 @@ class MemoryState( Enum ):
     BUSY = 2 
 
 class Users( Enum ): 
-    USER1 = 1
+    FETCH = 1
+    MEMORY = 2
 
 class Memory():
     """
