@@ -5,10 +5,16 @@ import instructions
 class ExecuteStage():
     """
     Implements the execute stage in the pipelinne
+
+    curr_instr
+        current instuction that is executing
+
+    status
+        status of execution stage
     """
 
     def __init__( self ):
-        self.current_instr = { 
+        self.curr_instr = { 
                 'Op': instructions.Op.NOOP,
                 'Operand_1': None,
                 'Operand_2': None,
@@ -19,28 +25,29 @@ class ExecuteStage():
     def execute_back_pass( self ):
         '''
         execute the backwards pass of the pipe
+        this is where the operations get executed
         '''
         mem_status = None 
         squash = False
         # instruction is a branch 
-        if self.current_instr.get( 'is_branch', False ):
+        if self.curr_instr.get( 'is_branch', False ):
             squash = instructions.branch_op( 
-                    self.current_instr[ 'Op' ], 
-                    self.current_instr[ 'Condition' ], 
-                    self.current_instr[ 'Address' ],
-                    self.current_instr[ 'Instr_offset' ]
+                    self.curr_instr[ 'Op' ], 
+                    self.curr_instr[ 'Condition' ], 
+                    self.curr_instr[ 'Address' ],
+                    self.curr_instr[ 'Instr_offset' ]
             )
 
         # instruction is a memory access
-        elif self.current_instr.get( 'is_mem_access', False ):
-            mem_status = instructions.mem_op(  self.current_instr[ 'Op' ], self.current_instr[ 'Address' ] )
+        elif self.curr_instr.get( 'is_mem_access', False ):
+            mem_status = instructions.mem_op(  self.curr_instr[ 'Op' ], self.curr_instr[ 'Address' ] )
         # else, instruction is ALU operation
         else:
             instructions.alu_op(
-                self.current_instr[ 'Op' ], 
-                self.current_instr[ 'Operand_1' ], 
-                self.current_instr[ 'Operand_2' ],
-                self.current_instr[ 'Operand_3' ] 
+                self.curr_instr[ 'Op' ], 
+                self.curr_instr[ 'Operand_1' ], 
+                self.curr_instr[ 'Operand_2' ],
+                self.curr_instr[ 'Operand_3' ] 
             )
 
         self.state = StageState.IDLE if mem_status !=  MemoryState.BUSY else StageState.STALL
@@ -53,11 +60,12 @@ class ExecuteStage():
     def execute_forward_pass( self, instr ):
         '''
         execute forward pass of execute 
+        this is where the next instuction is set if not busy
         '''
         
         # check if currently idle
         if self.state == StageState.IDLE:
-            self.current_instr = instr
+            self.curr_instr = instr
 
 if __name__ == '__main__':
     import registers
@@ -115,6 +123,3 @@ if __name__ == '__main__':
         print( response )
     print( registers.MEMORY.mem[ 9 ] )
     print( registers.PUSH )
-
-
-
