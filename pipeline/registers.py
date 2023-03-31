@@ -1,3 +1,5 @@
+from memory import Memory
+
 class Stack( ):
     """
     Used to model array of registers for stack machine
@@ -26,11 +28,18 @@ class Stack( ):
             self.stack[ self.top_index ] = val
     
     def pop( self ):
+        global POP
         '''pops value from top of stack into POP register'''
         # if stack is empty, do nothing
         if self.top_index > -1:
             POP = self.stack[ self.top_index ]
             self.top_index -= 1
+    
+    def __str__( self ):
+        if self.top_index > -1:
+            return str( self.stack[:self.top_index + 1] )
+        else:
+            return '[]'
 
 # singletons
 PC = 0
