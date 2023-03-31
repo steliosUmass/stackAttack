@@ -10,9 +10,9 @@ class ExecuteStage():
     def __init__( self ):
         self.current_instr = { 
                 'Op': instructions.Op.NOOP,
-                'operand_1': None,
-                'operand_2': None,
-                'operand_3': None
+                'Operand_1': None,
+                'Operand_2': None,
+                'Operand_3': None
         }
         self.status = StageState.IDLE
 
@@ -20,11 +20,11 @@ class ExecuteStage():
         '''
         execute the backwards pass of the pipe
         '''
-        
-        should_squash = False
+        mem_status = None 
+        squash = False
         # instruction is a branch 
         if self.current_instr.get( 'is_branch', False ):
-            should_squash = instructions.branch_op( 
+            squash = instructions.branch_op( 
                     self.current_instr[ 'Op' ], 
                     self.current_instr[ 'Condition' ], 
                     self.current_instr[ 'Address' ],
@@ -33,7 +33,7 @@ class ExecuteStage():
 
         # instruction is a memory access
         elif self.current_instr.get( 'is_mem_access', False ):
-            mem_status = instructions.mem_op(  self.current_instr[ 'Op' ],self.current_instr[ 'Address' ] )
+            mem_status = instructions.mem_op(  self.current_instr[ 'Op' ], self.current_instr[ 'Address' ] )
         # else, instruction is ALU operation
         else:
             instructions.alu_op(
@@ -46,11 +46,11 @@ class ExecuteStage():
         self.state = StageState.IDLE if mem_status !=  MemoryState.BUSY else StageState.STALL
         # return status from Execute to decode
         return { 
-                'should_squash': should_squash, 
+                'squash': squash, 
                 'status':  self.state
         }
     
-    def execute_forward_pass( self, instr )
+    def execute_forward_pass( self, instr ):
         '''
         execute forward pass of execute 
         '''
@@ -58,3 +58,63 @@ class ExecuteStage():
         # check if currently idle
         if self.state == StageState.IDLE:
             self.current_instr = instr
+
+if __name__ == '__main__':
+    import registers
+    
+    e = ExecuteStage()
+    print( e.execute_back_pass() )
+
+    # try add
+    instr = { 'Op': instructions.Op.ADD, 'Operand_1': 23,'Operand_2': 95, 'Operand_3': None }
+    e.execute_forward_pass( instr )
+    print( e.execute_back_pass() )
+    print( registers.STACK )
+
+    # try branch
+    instr = { 'Op': instructions.Op.JMP_IF_1, 'Address': 100, 'Instr_offset': 1, 'Condition': 1, 'is_branch': True }
+    e.execute_forward_pass( instr )
+    print( e.execute_back_pass() )
+    print( registers.PC )
+    print( registers.INSTR_OFFSET )
+
+    # try memory write access
+    instr = { 'Op': instructions.Op.POP, 'Operand_1': None,'Operand_2': None, 'Operand_3': None }
+    e.execute_forward_pass( instr )
+    e.execute_back_pass( )
+
+    instr = { 'Op': instructions.Op.STR_32, 'Address': 100, 'is_mem_access': True }
+    state = StageState.STALL
+    print( registers.POP )
+    while state == StageState.STALL:
+        e.execute_forward_pass( instr )
+        response = e.execute_back_pass()
+        state = response['status']
+        print( response )
+    print( registers.MEMORY.next_layer.mem[ 25 ] )
+    
+    # try memory read
+    instr = { 'Op': instructions.Op.LDR_32, 'Address': 100, 'is_mem_access': True }
+    state = StageState.STALL
+    while state == StageState.STALL:
+        e.execute_forward_pass( instr )
+        response = e.execute_back_pass()
+        state = response['status']
+        print( response )
+    print( registers.MEMORY.mem[ 9 ] )
+    print( registers.PUSH )
+
+
+     # try cache read
+    instr = { 'Op': instructions.Op.LDR_32, 'Address': 100, 'is_mem_access': True }
+    state = StageState.STALL
+    while state == StageState.STALL:
+        e.execute_forward_pass( instr )
+        response = e.execute_back_pass()
+        state = response['status']
+        print( response )
+    print( registers.MEMORY.mem[ 9 ] )
+    print( registers.PUSH )
+
+
+
