@@ -1,3 +1,2 @@
 PIPELINE_ON = True
-CACHE_ON = True
 INSTR_IN_PROGRESS = False

@@ -1,5 +1,4 @@
 from enum import Enum
-import pipeline_options 
 import copy
 
 class MemoryState( Enum ):
@@ -35,6 +34,7 @@ class Memory():
         ):
         
         self.mem = []
+        self.cache_on = True
 
         # info used during access 
         self.access_counter = 0
@@ -123,7 +123,7 @@ class Memory():
 
         if stage == self.access_stage and  address == self.address:
             # if cache is off go directly to upper level if cache
-            if self.next_layer is not None and not pipeline_options.CACHE_ON:
+            if self.next_layer is not None and not self.cache_on:
                 val = self.next_layer.read( address, self.access_stage )
                 return val
             if self.access_counter < 1:
@@ -199,7 +199,7 @@ class Memory():
                 status = self.next_layer.write( address, value, stage )
 
                 # only update cache if it is on
-                if pipeline_options.CACHE_ON and status == MemoryState.IDLE:
+                if self.cache_on and status == MemoryState.IDLE:
                     self.state = MemoryState.IDLE
                     
                     tag, index = self._calc_index_and_tag( address )
@@ -219,14 +219,18 @@ class Memory():
         
         return self.state
 
+    def set_cache( self, cache_on ):
+        '''sets bool to see if cache is on'''
+        self.cache_on = cache_on
+        if self.next_layer is not None:
+            self.next_layer.set_cache( cache_on )
+
 if __name__ == '__main__':
     
     from tabulate import tabulate
     cycles = 1
     m = Memory( 1000, reponse_cycles=3 )
     c = Memory( 16, reponse_cycles=0, next_layer=m )
-    global CACHE_ON
-    CACHE_ON = False
     current_action = None
     while True:
         print('-'*20 + 'Cycle {}'.format( cycles ) + '-'*20 )
