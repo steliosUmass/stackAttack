@@ -1,5 +1,6 @@
 from memory import MemoryState
 from stage_state import StageState
+from pipeline_options import INSTR_IN_PROGRESS
 import instructions
 
 class ExecuteStage():
@@ -51,6 +52,10 @@ class ExecuteStage():
             )
 
         self.state = StageState.IDLE if mem_status !=  MemoryState.BUSY else StageState.STALL
+
+        # if idle, set instruction in progress status
+        # this is used if the pipeline is off
+        INSTR_IN_PROGRESS = False
         # return status from Execute to decode
         return { 
                 'squash': squash, 
