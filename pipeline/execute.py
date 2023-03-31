@@ -74,7 +74,9 @@ class ExecuteStage():
 
 if __name__ == '__main__':
     import registers
-    
+    import pipeline_options
+    pipeline_options.CACHE_ON = False
+    print( pipeline_options.CACHE_ON )
     e = ExecuteStage()
     print( e.execute_back_pass() )
 

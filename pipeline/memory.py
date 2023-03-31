@@ -1,4 +1,5 @@
 from enum import Enum
+import pipeline_options 
 import copy
 
 class MemoryState( Enum ):
@@ -112,7 +113,6 @@ class Memory():
         NotImplementedError
             raised if address is larger than amount of words
         '''
-
         if self.state == MemoryState.IDLE:
             if address > self.total_mem_space:
                 raise NotImplementedError
@@ -122,6 +122,10 @@ class Memory():
             self.state = MemoryState.BUSY
 
         if stage == self.access_stage and  address == self.address:
+            # if cache is off go directly to upper level if cache
+            if self.next_layer is not None and not pipeline_options.CACHE_ON:
+                val = self.next_layer.read( address, self.access_stage )
+                return val
             if self.access_counter < 1:
                 # if the next layer is not none, than this is cache
                 # check to see if we have it
@@ -179,7 +183,6 @@ class Memory():
             raised if address is larger than amount of words
 
         '''
-
         if self.state == MemoryState.IDLE:
             if address > self.total_mem_space:
                 raise NotImplementedError
@@ -194,7 +197,9 @@ class Memory():
             # we want to write to ram so call write to next layer
             if self.next_layer is not None:
                 status = self.next_layer.write( address, value, stage )
-                if status == MemoryState.IDLE:
+
+                # only update cache if it is on
+                if pipeline_options.CACHE_ON and status == MemoryState.IDLE:
                     self.state = MemoryState.IDLE
                     
                     tag, index = self._calc_index_and_tag( address )
@@ -220,7 +225,8 @@ if __name__ == '__main__':
     cycles = 1
     m = Memory( 1000, reponse_cycles=3 )
     c = Memory( 16, reponse_cycles=0, next_layer=m )
-
+    global CACHE_ON
+    CACHE_ON = False
     current_action = None
     while True:
         print('-'*20 + 'Cycle {}'.format( cycles ) + '-'*20 )
@@ -252,10 +258,10 @@ if __name__ == '__main__':
 
             if current_action is not None:    
                 if current_action[ 0 ] == 'READ':
-                    read_val = c.read( int( current_action[ 1 ] ),  Users.USER1 )
+                    read_val = c.read( int( current_action[ 1 ] ),  Users.FETCH )
                     
                 elif current_action[ 0 ] == 'WRITE':
-                    write_val = c.write( int( current_action[ 1 ] ) , int( current_action[ 2 ] ).to_bytes( 4, 'big' ), Users.USER1 )
+                    write_val = c.write( int( current_action[ 1 ] ) , int( current_action[ 2 ] ).to_bytes( 4, 'big' ), Users.FETCH )
 
                    
             if current_action and current_action[ 0 ] == 'READ':
