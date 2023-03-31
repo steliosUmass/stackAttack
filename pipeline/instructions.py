@@ -9,7 +9,7 @@ class Op( Enum ):
     STR_32 = 4
     PUSH = 9
     POP = 10
-    JMP_if_1 = 12
+    JMP_IF_1 = 12
     ADD = 16
     EQ = 25
     NOOP = 48 
@@ -62,16 +62,17 @@ def branch_op( op, condition, address, instr_offset ):
 
     Returns
     --------
-    should_squash:
+    squash:
         bool indicating if earlier instuctions in the pipe should be squashed
     '''
-    should_squash = False
-    if op == Op.JMP_if_1:
+    squash = False
+    if op == Op.JMP_IF_1:
         if condition is not None and condition == 1:
+            print('here')
             registers.PC = address
             registers.INSTR_OFFSET = instr_offset
-            should_squash = True
-    return should_squash
+            squash = True
+    return squash
 
 
 def mem_op( op, address ):
@@ -94,7 +95,7 @@ def mem_op( op, address ):
     if op == Op.LDR_32:
         mem_status = registers.MEMORY.read( address, Users.MEMORY )
         if mem_status != MemoryState.BUSY:
-            mem_status.PUSH = int.from_bytes( mem_status, "big")
+            registers.PUSH = int.from_bytes( mem_status[ address % 4 ], "big")
     elif op == Op.STR_32:
         mem_status = registers.MEMORY.write( address, int( registers.POP & 2**32 - 1 ).to_bytes( 4, 'big' ), Users.MEMORY )
     return mem_status
@@ -131,6 +132,26 @@ if __name__ == '__main__':
     print('INSTR_OFFSET', registers.INSTR_OFFSET )
 
     # test mem instructions
+    mem_status = MemoryState.BUSY
+
+    while mem_status == MemoryState.BUSY:
+        mem_status = mem_op( Op.STR_32, 100 )   
+    print( registers.MEMORY.next_layer.mem[ 25 ] )
+    while mem_status == MemoryState.BUSY:
+        mem_status = mem_op( Op.LDR_32, 100 )
+    print( registers.PUSH )
+
+    # test mem read instructions
+    mem_status = MemoryState.BUSY
+
+    while mem_status == MemoryState.BUSY:
+        mem_status = mem_op( Op.STR_32, 100 )   
+    print( registers.MEMORY.next_layer.mem[ 25 ] )
+    while mem_status == MemoryState.BUSY:
+        mem_status = mem_op( Op.LDR_32, 100 )
+    print( registers.PUSH )
+    
+    # test mem read in cache instructions
     mem_status = MemoryState.BUSY
 
     while mem_status == MemoryState.BUSY:
