@@ -12,33 +12,34 @@ class Stack( ):
         for _ in range( size ):
             self.stack.append( 0 )
 
-    def push( self ):
+    def push( self, val ):
         '''pushes the value from the push register to the stack'''
 
         # if there is no overflow
         if self.top_index < len( self.stack ) - 1:
             self.top_index += 1
-            self.stack[ self.top_index ] = SpecialRegisters.PUSH
+            self.stack[ self.top_index ] = val
         else:
             # need to shift everthing down, the oldest value is lost
             for i in range( len( self.stack ) - 1 ):
                 self.stack[ i ] = self.stack[ i + 1 ]
-            self.stack[ self.top_index ] = SpecialRegisters.PUSH
+            self.stack[ self.top_index ] = val
     
     def pop( self ):
         '''pops value from top of stack into POP register'''
         # if stack is empty, do nothing
         if self.top_index > -1:
-            SpecialRegisters.POP = self.stack[ self.top_index ]
+            POP = self.stack[ self.top_index ]
             self.top_index -= 1
 
-class SpecialRegisters( ):
-    PC = 0
-    POP = 0
-    PUSH = 0
-    LINK = 0
-    STACK = Stack( 32 )
-
+# singletons
+PC = 0
+POP = 0
+PUSH = 0
+LINK = 0
+INSTR_OFFSET = 0
+STACK = Stack( 32 )
+MEMORY = Memory( 16, reponse_cycles=0, next_layer=Memory( 32000 // 4, reponse_cycles=5 ) )
 
 if __name__ == '__main__':
     # set push reg to 156
