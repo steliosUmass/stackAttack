@@ -10,6 +10,7 @@ class Op( Enum ):
     PUSH = 9
     POP = 10
     JMP_IF_1 = 12
+    JMP_IF_0 = 13
     ADD = 16
     EQ = 25
     NOOP = 48 
@@ -72,6 +73,12 @@ def branch_op( op, condition, address, instr_offset ):
             registers.PC = address
             registers.INSTR_OFFSET = instr_offset
             squash = True
+    if op == Op.JMP_IF_0:
+       if condition is not None and condition == 0:
+           registers.PC = address
+           registers.INSTR_OFFSET = instr_offset
+           squash = True
+
     return squash
 
 
