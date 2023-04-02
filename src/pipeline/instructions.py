@@ -13,6 +13,7 @@ class Op( Enum ):
     ADD = 16
     EQ = 25
     NOOP = 48 
+    HALT = 49
 
 
 def alu_op( op,  operand_1, operand_2, operand_3 ):

@@ -30,6 +30,15 @@ class ExecuteStage():
         '''
         mem_status = None 
         squash = False
+
+        # if instruction is halt, return with finish flag
+        if self.curr_instr[ 'Op' ] == instructions.Op.HALT:
+            return { 
+                'squash': squash, 
+                'status':  self.status,
+                'finish': True
+        }
+
         # instruction is a branch 
         if self.curr_instr.get( 'is_branch', False ):
             squash = instructions.branch_op( 
@@ -57,7 +66,7 @@ class ExecuteStage():
         # this is used if the pipeline is off
         if self.status== StageState.IDLE:
             pipeline_options.INSTR_IN_PROGRESS = False
-        
+       
         # return status from Execute to decode
         return { 
                 'squash': squash, 
