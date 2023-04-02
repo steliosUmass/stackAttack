@@ -51,17 +51,17 @@ class ExecuteStage():
                 self.curr_instr[ 'Operand_3' ] 
             )
 
-        self.state = StageState.IDLE if mem_status !=  MemoryState.BUSY else StageState.STALL
+        self.status = StageState.IDLE if mem_status !=  MemoryState.BUSY else StageState.STALL
 
         # if idle, set instruction in progress status
         # this is used if the pipeline is off
-        if self.state == StageState.IDLE:
+        if self.status== StageState.IDLE:
             pipeline_options.INSTR_IN_PROGRESS = False
         
         # return status from Execute to decode
         return { 
                 'squash': squash, 
-                'status':  self.state
+                'status':  self.status
         }
     
     def execute_forward_pass( self, instr ):
@@ -71,7 +71,7 @@ class ExecuteStage():
         '''
         
         # check if currently idle
-        if self.state == StageState.IDLE:
+        if self.status == StageState.IDLE:
             self.curr_instr = instr
 
 if __name__ == '__main__':
