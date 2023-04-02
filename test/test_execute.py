@@ -14,7 +14,7 @@ class TestExecute( unittest.TestCase ):
     def setUp( self ):
         self.e = ExecuteStage()
     
-    def testInit( self ):
+    def test_init( self ):
         assert { 'squash': False, 'status': StageState.IDLE } == self.e.execute_back_pass(  )
         assert registers.STACK.top_index == -1
         assert registers.PC == 0
@@ -23,7 +23,7 @@ class TestExecute( unittest.TestCase ):
         assert registers.POP == 0
         assert registers.LINK == 0
     
-    def testStalled( self ):
+    def test_stalled( self ):
         instr = { 'Op': instructions.Op.ADD, 'Operand_1': 23,'Operand_2': 95, 'Operand_3': None }
         self.e.execute_forward_pass( instr )
         self.e.status = StageState.STALL
@@ -31,27 +31,27 @@ class TestExecute( unittest.TestCase ):
         self.e.execute_forward_pass( instr2 )
         assert self.e.curr_instr == instr
 
-    def testAdd( self ):
+    def test_add( self ):
         instr = { 'Op': instructions.Op.ADD, 'Operand_1': 23,'Operand_2': 95, 'Operand_3': None }
         self.e.execute_forward_pass( instr )
         assert { 'squash': False, 'status': StageState.IDLE } == self.e.execute_back_pass(  )
         assert registers.STACK.stack[ 0 ] == 23 + 95
     
-    def testBranchTaken( self ):
+    def test_branch_taken( self ):
         instr = { 'Op': instructions.Op.JMP_IF_1, 'Address': 100, 'Instr_offset': 1, 'Condition': 1, 'is_branch': True }
         self.e.execute_forward_pass( instr )
         assert { 'squash': True, 'status': StageState.IDLE } == self.e.execute_back_pass(  )
         assert registers.PC == 100
         assert registers.INSTR_OFFSET == 1
     
-    def testBranchNotTaken( self ):
+    def test_branch_not_taken( self ):
         instr = { 'Op': instructions.Op.JMP_IF_1, 'Address': 300, 'Instr_offset': 1, 'Condition': 0, 'is_branch': True }
         self.e.execute_forward_pass( instr )
         assert { 'squash': False, 'status': StageState.IDLE } == self.e.execute_back_pass(  )
         assert registers.PC == 0
         assert registers.INSTR_OFFSET == 0
 
-    def testMemoryRead( self ):
+    def test_mem_read( self ):
          instr = { 'Op': instructions.Op.STR_32, 'Address': 100, 'is_mem_access': True }
          registers.POP = 89
          self.e.execute_forward_pass( instr )
