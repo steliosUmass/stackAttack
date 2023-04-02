@@ -1,2 +1,3 @@
 venv/
+src/gui/sim_gui.py
 __pycache__
