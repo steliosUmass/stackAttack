@@ -90,7 +90,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,1,0,0">
+         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0,0,1">
           <item>
            <widget class="QLabel" name="label_3">
             <property name="text">
@@ -102,7 +102,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QTableView" name="regTable"/>
+           <widget class="QListView" name="regView"/>
           </item>
           <item>
            <widget class="QLabel" name="label_2">
@@ -118,7 +118,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QTableView" name="stackTable"/>
+           <widget class="QListView" name="stackView"/>
           </item>
          </layout>
         </item>
