@@ -42,7 +42,7 @@ def alu_op( op,  operand_1, operand_2, operand_3 ):
         registers.STACK.push( registers.PUSH )
     elif op == Op.POP:
         registers.STACK.pop()
-    if result_val != None:
+    if result_val is not None:
         registers.STACK.push( result_val )
 
 def branch_op( op, condition, address, instr_offset ):
@@ -68,7 +68,6 @@ def branch_op( op, condition, address, instr_offset ):
     squash = False
     if op == Op.JMP_IF_1:
         if condition is not None and condition == 1:
-            print('here')
             registers.PC = address
             registers.INSTR_OFFSET = instr_offset
             squash = True
