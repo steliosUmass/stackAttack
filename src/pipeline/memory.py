@@ -149,8 +149,8 @@ class Memory():
                         self.valid[index] = True
                         self.tag[index] = tag
                         self.mem[index] = val
-
-                    self.state = MemoryState.IDLE
+                        self.state = MemoryState.IDLE
+                    
                     return val
 
                 else:
