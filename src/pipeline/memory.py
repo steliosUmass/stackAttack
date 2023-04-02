@@ -60,7 +60,7 @@ class Memory():
         # we are cache, create valid array and tag array
         if next_layer is not None:
             self.valid = [False] * num_lines
-            self.tag = [0] * num_lines
+            self.tag = [ b'\x00' ] * num_lines
 
             # if we are cache, get total memory space from next layer
             self.total_mem_space = next_layer.total_mem_space
