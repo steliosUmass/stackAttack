@@ -94,7 +94,7 @@
           <item>
            <widget class="QLabel" name="label_3">
             <property name="text">
-             <string>Registers</string>
+             <string>Registers/ Running Info</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -135,11 +135,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QTableView" name="InstrucTable">
-            <property name="frameShape">
-             <enum>QFrame::Box</enum>
-            </property>
-           </widget>
+           <widget class="QListView" name="InstrView"/>
           </item>
          </layout>
         </item>

@@ -74,13 +74,25 @@ class RegisterModel( QtCore.QAbstractListModel ):
     
     def data(self, index, role):
         if role == Qt.DisplayRole:
-            return str( self._data[index.row()] )
+            return self._data[index.row()]
     
     def rowCount(self, index):
         # The length of the outer list.
         return len(self._data)
     
-
+class InstrModel( QtCore.QAbstractListModel ):
+    def __init__(self, data ):
+        super(InstrModel, self).__init__()
+        self._data = data
+    
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            return self._data[index.row()]
+    
+    def rowCount(self, index):
+        # The length of the outer list.
+        return len(self._data)
+    
 class StackModel( QtCore.QAbstractTableModel ):
     def __init__(self, data ):
         super(StackModel, self).__init__()

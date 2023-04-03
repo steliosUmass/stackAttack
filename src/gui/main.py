@@ -11,7 +11,10 @@ import os
 
 # Add pipeline directory to path
 sys.path.insert( 0, os.path.join( os.path.dirname( os.path.dirname(  os.path.realpath( __file__ ) ) ), 'pipeline' ) )
+sys.path.insert( 0, os.path.join( os.path.dirname( os.path.dirname( os.path.dirname(  os.path.realpath( __file__ )  ) ) ), 'tools' ) )
+
 import registers
+from disassembler import dissassemble
 
 class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
     def __init__(self, parent=None):
@@ -45,9 +48,9 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
 
     def load_program( self ):
         initial_dir = os.path.dirname( os.path.dirname( os.path.dirname(  os.path.realpath( __file__ ) ) ) )
-        filename = filedialog.askopenfilename( initialdir = initial_dir, title = "Select Program" )
+        file_name = filedialog.askopenfilename( initialdir = initial_dir, title = "Select Program" )
         b = None
-        with open( filename, 'rb' ) as f:
+        with open( file_name, 'rb' ) as f:
             b = bytearray( f.read() )
        
         mem_index = 0
@@ -68,6 +71,7 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
 
         # refresh gui with program 
         self.index_changed_memCombo( self.memCombo.currentIndex() )
+        self.InstrView.setModel( view_models.InstrModel( dissassemble( file_name ) ) )
 
 def main():
     app = QApplication(sys.argv)
