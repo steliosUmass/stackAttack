@@ -25,8 +25,10 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
         self.memCombo.addItems( [ 'RAM', 'CACHE'] )
 
         # set check state for cache on and pipeline on
+        # also assign signals
         self.cacheOn.setChecked( True )
         self.pipeOn.setChecked( True )
+        self.cacheOn.stateChanged.connect( self.set_cache_enable )
 
         # set listener for combo box between memory and cache ( and call it with index 0 )
         self.memCombo.currentIndexChanged.connect( self.index_changed_memCombo )
@@ -45,6 +47,12 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
         elif index == 1:
             # show cache
             self.memTable.setModel( view_models.CacheModel( registers.MEMORY.tag, registers.MEMORY.mem, registers.MEMORY.valid ) )
+
+    def set_cache_enable( self, state ):
+        if state == 0:
+            registers.MEMORY.set_cache( False )
+        elif state == 2:
+            registers.MEMORY.set_cache( True )
 
     def load_program( self ):
         initial_dir = os.path.dirname( os.path.dirname( os.path.dirname(  os.path.realpath( __file__ ) ) ) )
