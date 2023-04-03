@@ -37,6 +37,12 @@ class TestExecute( unittest.TestCase ):
         assert { 'squash': False, 'status': StageState.IDLE } == self.e.execute_back_pass(  )
         assert registers.STACK.stack[ 0 ] == 23 + 95
     
+    def test_squash( self ):
+        instr = { 'Op': instructions.Op.ADD, 'Operand_1': 23,'Operand_2': 95, 'Operand_3': None, 'squash': True }
+        self.e.execute_forward_pass( instr )
+        assert { 'squash': False, 'status': StageState.IDLE } == self.e.execute_back_pass(  )
+        assert registers.STACK.top_index == -1
+
     def test_branch_taken( self ):
         instr = { 'Op': instructions.Op.JMP_IF_1, 'Address': 100, 'Instr_offset': 1, 'Condition': 1, 'is_branch': True }
         self.e.execute_forward_pass( instr )

@@ -31,42 +31,41 @@ class ExecuteStage():
         mem_status = None 
         squash = False
 
-        # if instruction is halt, return with finish flag
-        if self.curr_instr[ 'Op' ] == instructions.Op.HALT:
-            return { 
-                'squash': squash, 
-                'status':  self.status,
-                'finish': True
-        }
+        # check to see if current instruction should be squashed
 
-        # instruction is a branch 
-        if self.curr_instr.get( 'is_branch', False ):
-            squash = instructions.branch_op( 
+        if not self.curr_instr.get( 'squash', False ):
+
+            # if instruction is halt, return with finish flag
+            if self.curr_instr[ 'Op' ] == instructions.Op.HALT:
+               return { 
+                    'squash': squash, 
+                    'status':  self.status,
+                    'finish': True
+            }
+
+            # instruction is a branch 
+            if self.curr_instr.get( 'is_branch', False ):
+                squash = instructions.branch_op( 
+                        self.curr_instr[ 'Op' ], 
+                        self.curr_instr[ 'Condition' ], 
+                        self.curr_instr[ 'Address' ],
+                        self.curr_instr[ 'Instr_offset' ]
+                )
+
+            # instruction is a memory access
+            elif self.curr_instr.get( 'is_mem_access', False ):
+                mem_status = instructions.mem_op(  self.curr_instr[ 'Op' ], self.curr_instr[ 'Address' ] )
+            # else, instruction is ALU operation
+            else:
+                instructions.alu_op(
                     self.curr_instr[ 'Op' ], 
-                    self.curr_instr[ 'Condition' ], 
-                    self.curr_instr[ 'Address' ],
-                    self.curr_instr[ 'Instr_offset' ]
-            )
-
-        # instruction is a memory access
-        elif self.curr_instr.get( 'is_mem_access', False ):
-            mem_status = instructions.mem_op(  self.curr_instr[ 'Op' ], self.curr_instr[ 'Address' ] )
-        # else, instruction is ALU operation
-        else:
-            instructions.alu_op(
-                self.curr_instr[ 'Op' ], 
-                self.curr_instr[ 'Operand_1' ], 
-                self.curr_instr[ 'Operand_2' ],
-                self.curr_instr[ 'Operand_3' ] 
-            )
+                    self.curr_instr[ 'Operand_1' ], 
+                    self.curr_instr[ 'Operand_2' ],
+                    self.curr_instr[ 'Operand_3' ] 
+                )
 
         self.status = StageState.IDLE if mem_status !=  MemoryState.BUSY else StageState.STALL
-
-        # if idle, set instruction in progress status
-        # this is used if the pipeline is off
-        if self.status== StageState.IDLE:
-            pipeline_options.INSTR_IN_PROGRESS = False
-       
+        
         # return status from Execute to decode
         return { 
                 'squash': squash, 
