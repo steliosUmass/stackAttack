@@ -28,6 +28,14 @@ class TestStack( unittest.TestCase ):
             self.stack.push( 198 )
             test_stack = [ 34 ] * ( 31 - i ) + [ 198 ] * ( i + 1 ) 
             assert self.stack.stack == test_stack 
+    
+    def test_remove( self ):
+        for i in range( 32 ):
+            self.stack.push( i )
+        for i in range( 31, -1, -1 ):
+            assert self.stack.top_index == i
+            val = self.stack.remove()
+            assert val == i
 
     def test_pop( self ):
         for i in range( 32 ):
@@ -36,6 +44,7 @@ class TestStack( unittest.TestCase ):
             assert self.stack.top_index == i
             self.stack.pop()
             assert registers.POP == i
+    
     def test_pop_empty( self ):
         assert self.stack.top_index == -1
         self.stack.pop()

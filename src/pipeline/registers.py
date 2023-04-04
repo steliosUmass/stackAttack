@@ -31,10 +31,20 @@ class Stack():
     def pop(self):
         global POP
         '''pops value from top of stack into POP register'''
+        val = self.remove( )
+        if val is not None:
+            POP = val
+    
+    def remove(self):
+        global POP
+        '''pops value from top of stack and returns it'''
+        val = None
         # if stack is empty, do nothing
         if self.top_index > -1:
-            POP = self.stack[self.top_index]
+            val = self.stack[self.top_index]
             self.top_index -= 1
+        return val
+
 
     def __str__(self):
         if self.top_index > -1:
