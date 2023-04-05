@@ -13,6 +13,7 @@ import os
 sys.path.insert( 0, os.path.join( os.path.dirname( os.path.dirname(  os.path.realpath( __file__ ) ) ), 'pipeline' ) )
 sys.path.insert( 0, os.path.join( os.path.dirname( os.path.dirname( os.path.dirname(  os.path.realpath( __file__ )  ) ) ), 'tools' ) )
 
+from pipeline import PipeLine
 import registers
 from disassembler import dissassemble
 
@@ -29,17 +30,51 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
         self.cacheOn.setChecked( True )
         self.pipeOn.setChecked( True )
         self.cacheOn.stateChanged.connect( self.set_cache_enable )
+        self.pipeOn.stateChanged.connect( self.set_pipeline_enable )
 
-        # set listener for combo box between memory and cache ( and call it with index 0 )
+        # set signal for combo box between memory and cache ( and call it with index 0 )
         self.memCombo.currentIndexChanged.connect( self.index_changed_memCombo )
         self.index_changed_memCombo( 0 )
 
         # init register table
-        self.regView.setModel( view_models.RegisterModel( registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP ) )
+        self.regView.setModel( view_models.RegisterModel( 
+            registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP, 0 ) )
 
-        # add listener to load program
+        # add signal to load program
         self.LoadButton.clicked.connect( self.load_program )           
+
+        # create pipeline object to controll simulation
+        self.pipeline = PipeLine( )
+
+        # add signal for running sim
+        self.runButton.clicked.connect( self.run )
+
+        # add signal for step sim
+        self.stepButton.clicked.connect( self.step )
+
+        
+    def update_gui( self ):
+        '''updates the gui with the current state of the simulator'''
+        # update memory
+        self.index_changed_memCombo( self.memCombo.currentIndex() )
+        
+        # update registers 
+        self.regView.setModel( view_models.RegisterModel( 
+            registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP, self.pipeline.cycle ) )
+
+        stack_list = registers.STACK.stack[ : registers.STACK.top_index ] 
+        if registers.STACK.top_index  < 0:
+            stack_list = []
+        self.stackView.setModel( view_models.StackModel( stack_list ) )
+
+    def step( self ):
+        self.pipeline.step( )
+        self.update_gui( ) 
     
+    def run( self ):
+        self.pipeline.step( )
+        self.update_gui( ) 
+
     def index_changed_memCombo( self, index ):
         if index == 0:
             # show ram
@@ -53,6 +88,12 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
             registers.MEMORY.set_cache( False )
         elif state == 2:
             registers.MEMORY.set_cache( True )
+    
+    def set_pipeline_enable( self, state ):
+        if state == 0:
+            self.pipeline.set_pipeline_status( False )
+        elif state == 2:
+            self.pipeline.set_pipeline_status( True )
 
     def load_program( self ):
         initial_dir = os.path.dirname( os.path.dirname( os.path.dirname(  os.path.realpath( __file__ ) ) ) )
