@@ -4,21 +4,20 @@ class PipeLine( ):
     """
     Used step or run through simulation
     """
-
-    def __init__():
+    def __init__( self ):
         self.cycle = 0
         self.pipeline_on = True
         self.halt = False
         self.execute = ExecuteStage()
     
-    def step():
-        execute_status = execute_back_pass( self ):
+    def step( self ):
+        #execute_status = self.execute.execute_back_pass( )
 
         # increment cycle
         self.cycle += 1
 
 
-    def run():
+    def run( self ):
         '''run simulation until halt instr is hit'''
         while not self.halt:
             self.step( )
