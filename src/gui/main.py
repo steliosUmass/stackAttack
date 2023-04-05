@@ -68,14 +68,17 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
         self.stackView.setModel( view_models.StackModel( stack_list ) )
 
     def step( self ):
+        '''step through one cycle'''
         self.pipeline.step( )
         self.update_gui( ) 
     
     def run( self ):
+        '''runs simulation untill halt instr is reached'''
         self.pipeline.step( )
         self.update_gui( ) 
 
     def index_changed_memCombo( self, index ):
+        '''updates the mem table to show either cache or ram based on comboBox index'''
         if index == 0:
             # show ram
             self.memTable.setModel( view_models.RamModel( registers.MEMORY.next_layer.mem ) )
@@ -84,18 +87,21 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
             self.memTable.setModel( view_models.CacheModel( registers.MEMORY.tag, registers.MEMORY.mem, registers.MEMORY.valid ) )
 
     def set_cache_enable( self, state ):
+        '''activates or disables cache'''
         if state == 0:
             registers.MEMORY.set_cache( False )
         elif state == 2:
             registers.MEMORY.set_cache( True )
     
     def set_pipeline_enable( self, state ):
+        '''activates or disables pipeline'''
         if state == 0:
             self.pipeline.set_pipeline_status( False )
         elif state == 2:
             self.pipeline.set_pipeline_status( True )
 
     def load_program( self ):
+        '''loads a binary file into main memory and updates gui to reflect changes'''
         initial_dir = os.path.dirname( os.path.dirname( os.path.dirname(  os.path.realpath( __file__ ) ) ) )
         file_name = filedialog.askopenfilename( initialdir = initial_dir, title = "Select Program" )
         b = None
@@ -125,6 +131,7 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
 def main():
     app = QApplication(sys.argv)
     sim = Simulator()
+    # hide tkinter root window
     root = tkinter.Tk()
     root.withdraw()
     sim.show()
