@@ -1,6 +1,13 @@
 # got this from https://www.pythonguis.com/tutorials/qtableview-modelviews-numpy-pandas/
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
+import sys
+import os
+
+# Add pipeline directory to path
+sys.path.insert( 0, os.path.join( os.path.dirname( os.path.dirname(  os.path.realpath( __file__ ) ) ), 'pipeline' ) )
+
+import registers
 
 class RamModel( QtCore.QAbstractTableModel ):
     def __init__(self, data):
@@ -13,6 +20,9 @@ class RamModel( QtCore.QAbstractTableModel ):
             # .row() indexes into the outer list,
             # .column() indexes into the sub-list
             return self._data[index.row()][index.column()].hex()
+        elif role == Qt.BackgroundRole:
+            if index.row() * 4 + index.column() == registers.PC:
+                return QtGui.QColor.fromRgb( 255, 255, 224, alpha=.8 )
 
     def rowCount(self, index):
         # The length of the outer list.
@@ -66,11 +76,11 @@ class CacheModel( QtCore.QAbstractTableModel ):
                 return 'Line ' + str(section)
 
 class RegisterModel( QtCore.QAbstractListModel ):
-    def __init__(self, pc, instr_offset, link, push, pop ):
+    def __init__(self, pc, instr_offset, link, push, pop, cycle ):
         super(RegisterModel, self).__init__()
         self._data = [ 'PC: %d' % pc, ' INSTR_OFFSET: %d' % instr_offset, 
                 'LINK: %d' % link, 'PUSH: {}'.format( push.to_bytes( 16, 'big' ).hex() ), 
-                'POP: {}'.format( pop.to_bytes( 16, 'big' ).hex() ) ]
+                'POP: {}'.format( pop.to_bytes( 16, 'big' ).hex() ), '-'*20, 'Cycle: %d' % cycle ]
     
     def data(self, index, role):
         if role == Qt.DisplayRole:
@@ -93,29 +103,15 @@ class InstrModel( QtCore.QAbstractListModel ):
         # The length of the outer list.
         return len(self._data)
     
-class StackModel( QtCore.QAbstractTableModel ):
+class StackModel( QtCore.QAbstractListModel  ):
     def __init__(self, data ):
         super(StackModel, self).__init__()
         self._data = data
     
     def data(self, index, role):
         if role == Qt.DisplayRole:
-            return str( self._data[index.row()][index.column()] )
+            return str( self._data[index.row()] )
     
     def rowCount(self, index):
         # The length of the outer list.
         return len(self._data)
-    
-    def columnCount(self, index):
-        # The following takes the first sub-list, and returns
-        # the length (only works if all rows are an equal length)
-        return len(self._data[0])
-
-    def headerData(self, section, orientation, role):
-        # section is the index of the column/row
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal:
-                return 'Value'
-
-            if orientation == Qt.Vertical:
-                return str( section )
