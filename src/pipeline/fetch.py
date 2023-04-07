@@ -5,24 +5,37 @@ from decode import Decode
 
 
 class Fetch:
+    # TODO: Add support for instruction offset
     def __init__(self):
+        # setting initial values for the fetch stage
         self.status = StageState.IDLE
-        self.counter = 0
         self.instr_per_word = 4
+        self.load_data = None
 
     def load(self, address):
+        # When the address is not in the cache it will return BUSY and stall the pipeline
+        # else it will return the data and continue the pipeline
+
+        # Set the fetch status to stall by default
         self.status = StageState.STALL
         return registers.MEMORY.read(address, Users.FETCH)
 
     def fetch(self, pc=registers.PC, offset=registers.INSTR_OFFSET, decode_state=StageState.STALL):
-        load_data = self.load(pc)
-        if load_data != MemoryState.BUSY and decode_state != StageState.STALL:
+        self.load_data = self.load(pc)
+        # Check if the memory or the decode stage is busy
+        if self.load_data != MemoryState.BUSY and decode_state != StageState.STALL:
+            # Set the fetch status to idle
             self.status = StageState.IDLE
+
+            # Update the PC and the instruction offset
             registers.INSTR_OFFSET = offset + 1
             registers.PC = pc + registers.INSTR_OFFSET // self.instr_per_word
             registers.INSTR_OFFSET = registers.INSTR_OFFSET % self.instr_per_word
-            load_data_pc = load_data[pc % 4]
+
+            # Extract the instruction from the load data
+            load_data_pc = self.load_data[pc % 4]
             load_data_pc_offset = load_data_pc[offset]
             return load_data_pc_offset
 
+        # If the memory or the decode stage is busy, return Op.NOOP
         return 48
