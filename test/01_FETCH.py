@@ -1,13 +1,14 @@
 import unittest
 import sys
-
+import os
 
 try:
-    sys.path.append('src/pipeline')
+    sys.path.insert(0, os.path.join(os.path.dirname(
+        os.path.dirname(os.path.realpath(__file__))), 'src', 'pipeline'))
     from fetch import *
 except ImportError:
-    sys.path.append('../src/pipeline')
-    from fetch import *
+    print("Error: failed to import module")
+    sys.exit(1)
 
 
 class TestFetch(unittest.TestCase):
@@ -38,10 +39,9 @@ class TestFetch(unittest.TestCase):
             op = fetch.fetch(
                 registers.PC, registers.INSTR_OFFSET, decode_status)
             # print("clock:", clock, "op:", decode.decode(op))
-            outputs.append(decode.decode(op).value)
+            outputs.append(decode.decode(op)['Op'].value)
         self.assertEqual(outputs, expected_outputs), "Fetch test failed"
 
 
 if __name__ == '__main__':
     unittest.main()
-    
