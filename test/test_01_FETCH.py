@@ -36,8 +36,7 @@ class TestFetch(unittest.TestCase):
                 write(clock, registers.PC, write_val, decode)
                 clock += 5
 
-            op = fetch.fetch(
-                registers.PC, registers.INSTR_OFFSET, decode_status)
+            op = fetch.fetch(decode_status)
             # print("clock:", clock, "op:", decode.decode(op))
             outputs.append(decode.decode(op)['Op'].value)
         self.assertEqual(outputs, expected_outputs), "Fetch test failed"

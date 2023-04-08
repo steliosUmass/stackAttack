@@ -59,10 +59,10 @@ class TestDecode(unittest.TestCase):
         # first bit is 1 - the type indicator,
         # next 2 bits are 00 - the op code for PUSH_VAL,
         # and the last 5 bits are 00011 - the operand
-        curr_instr = self.decode(int(b'10000011', 2))
+        test_instr = self.decode(int(b'10000011', 2))
         expected_instr = self.create_instruction(
             type=1, op=Op.PUSH_VAL, operand_1=int(b'00011', 2))
-        self.assertEqual(curr_instr, expected_instr), "Decode test failed"
+        self.assertEqual(test_instr, expected_instr), "Decode test failed"
 
 
 if __name__ == '__main__':
