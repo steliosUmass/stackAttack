@@ -20,7 +20,11 @@ class Fetch:
         self.status = StageState.STALL
         return registers.MEMORY.read(address, Users.FETCH)
 
-    def fetch(self, pc=registers.PC, offset=registers.INSTR_OFFSET, decode_state=StageState.STALL):
+    def fetch(self, decode_state=StageState.STALL):
+        # Get the PC and the instruction offset
+        pc = registers.PC
+        offset = registers.INSTR_OFFSET
+
         self.load_data = self.load(pc)
         # Check if the memory or the decode stage is busy
         if self.load_data != MemoryState.BUSY and decode_state != StageState.STALL:
@@ -39,3 +43,11 @@ class Fetch:
 
         # If the memory or the decode stage is busy, return Op.NOOP
         return 48
+
+    def fetch_back_pass(self, decode_status):
+        if decode_status['status'] == StageState.STALL:
+            self.status = StageState.STALL
+        return decode_status
+
+    def fetch_forward_pass(self, decode_status):
+        return self.fetch(decode_state=decode_status['status'])

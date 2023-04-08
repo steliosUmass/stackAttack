@@ -6,11 +6,12 @@ import pipeline_options
 import decode_handler
 
 from decode_types import alu, branch, memory
+from execute import *
 
 
 class Decode:
     def __init__(self):
-        self.status = StageState.IDLE
+        self.status = None
         self.counter = 0
 
         self.alu_op = alu.alu
@@ -55,10 +56,11 @@ class Decode:
         return self.curr_instr
 
     def decode_forward_pass(self, curr_instr):
-        self.status = StageState.IDLE
-        return curr_instr
+        # self.status = StageState.IDLE
+        if self.status == StageState.STALL:
+            return self.new_instr.copy()
+        return self.decode(curr_instr)
 
-    def decode_back_pass(self):
-        return {
-            'status': self.status
-        }
+    def decode_back_pass(self, execute_status):
+        self.status = execute_status
+        return self.status
