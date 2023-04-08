@@ -1,26 +1,34 @@
 from execute import ExecuteStage
+from decode import Decode
+from fetch import Fetch
 
-class PipeLine( ):
+class PipeLine():
     """
     Used step or run through simulation
     """
-    def __init__( self ):
+
+    def __init__(self):
         self.cycle = 0
         self.pipeline_on = True
         self.halt = False
         self.execute = ExecuteStage()
-    
-    def step( self ):
-        #execute_status = self.execute.execute_back_pass( )
+        self.decode = Decode()
+        self.fetch = Fetch()
 
+    def step(self):
+        execute_status = self.execute.execute_back_pass()
+        decode_status = self.decode.decode_back_pass(execute_status)
+        self.fetch.fetch_back_pass(decode_status)
+        curr_opcode = self.fetch.fetch_forward_pass(decode_status)
+        curr_instr = self.decode.decode_forward_pass(curr_opcode)
+        self.execute.execute_forward_pass(curr_instr)
         # increment cycle
         self.cycle += 1
 
-
-    def run( self ):
+    def run(self):
         '''run simulation until halt instr is hit'''
         while not self.halt:
-            self.step( )
+            self.step()
 
-    def set_pipeline_status( is_on ):
-        self.pipeline_on= is_on
+    def set_pipeline_status(self, is_on):
+        self.pipeline_on = is_on
