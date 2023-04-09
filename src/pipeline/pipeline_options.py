@@ -1,2 +1,0 @@
-PIPELINE_ON = True
-INSTR_IN_PROGRESS = False
