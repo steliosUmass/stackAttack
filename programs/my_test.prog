@@ -1,0 +1,8 @@
+# Pushing 7 and 15
+PUSH_VAL 7
+PUSH_VAL 15
+
+# Add them and check if it's 22
+ADD
+PUSH_VAL 22
+EQ
