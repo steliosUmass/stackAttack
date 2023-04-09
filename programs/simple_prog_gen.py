@@ -12,12 +12,12 @@ instr_mapping = {
         Op.STR_32: 2**7 + 1,
         Op.PUSH: 2**7 + 6,
         Op.POP :2**7 + 7,
-        Op.JMP_IF_1: 2**7 + 12,
-        Op.JMP_IF_0: 2**7 + 13,
-        Op.ADD: 2**7  + 16,
-        Op.EQ: 2**7 + 25,
-        Op.NOOP: 2**7 + 48,
-        Op.HALT: 2**7 + 49
+        Op.JMP_IF_1: 2**7 + 9,
+        Op.JMP_IF_0: 2**7 + 10,
+        Op.ADD: 2**7  + 13,
+        Op.EQ: 2**7 + 22,
+        Op.NOOP: 2**7 + 45,
+        Op.HALT: 2**7 + 46
 }
 
 program = [

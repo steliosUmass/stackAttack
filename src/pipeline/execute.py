@@ -65,7 +65,7 @@ class ExecuteStage():
                 )
 
         self.status = StageState.IDLE if mem_status !=  MemoryState.BUSY else StageState.STALL
-        print( registers.STACK ) 
+        
         # return status from Execute to decode
         return { 
                 'squash': squash, 

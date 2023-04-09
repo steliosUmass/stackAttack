@@ -18,22 +18,28 @@ class PipeLine():
 
     def step(self):
         execute_status = self.execute.execute_back_pass()
+        print('EXCUTE', self.execute.curr_instr )
+        print('EXCUTE_status', execute_status )
         decode_status = self.decode.decode_back_pass(execute_status)
-
+        print('DECODE_STATUS', decode_status )
         # check if current insturction are NOOP
         # this is needed in non pipline mode to see if fetch
         # should issue an instruction
-        should_issue = self.pipeline_on or 
-            ( self.execute.curr_instr[ 'Op' ] == instructions.Op.NOOP 
-                    and  self.decode.curr_instr[ 'Op' ] == instructions.Op.NOOP)
+        should_issue = ( self.pipeline_on or 
+             ( self.execute.curr_instr[ 'Op' ] == instructions.Op.NOOP 
+                    and  self.decode.curr_instr[ 'Op' ] == instructions.Op.NOOP ) )
 
         # check to see if halt was executed
-        self.halt = self.execute.curr_instr[ 'Op' ] == instructions.Op.HALT
+        self.halt = execute_status.get( 'finished', False )
 
         self.fetch.fetch_back_pass( decode_status )
         curr_opcode = self.fetch.fetch_forward_pass(decode_status, should_issue )
         curr_instr = self.decode.decode_forward_pass(curr_opcode)
         self.execute.execute_forward_pass(curr_instr)
+        
+        print()
+        print()
+
         # increment cycle
         self.cycle += 1
 

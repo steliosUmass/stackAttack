@@ -31,44 +31,51 @@ class Decode:
             'squash': False
         }
         self.curr_instr = self.new_instr.copy()
-        self.todo_opcode = 48
+        self.todo_op = { 'instr': 45 + 2**7, 'squash': False }
 
-    def decode(self, op):
+    def decode(self  ):
         self.curr_instr = self.new_instr.copy()
+        self.curr_instr['squash'] = self.todo_op['squash']     
+        op = self.todo_op['instr']
+
+
         # Pulls out bit 7 to get the type
         self.curr_instr['type'] = op >> 7
 
         if self.curr_instr['type'] == 0:
             # Pulls out bits 5-6 to get the OPCODE
-            self.curr_instr['Op'] = Op((op >> 5) & 0x3)
+            self.curr_instr['Op'] = Op((op >> 5) & 0x3 )
             # Pulls out bits 0-4 to get the operand
             self.curr_instr['Operand_1'] = op & 0x1F
-            # print(self.curr_instr['Op'], self.curr_instr['Operand_1'])
         else:
             # Pulls out bits 0-6 to get the OPCODE
-            self.curr_instr['Op'] = Op(op & 0x7F)
+            self.curr_instr['Op'] = Op( ( op & 0x7F ) + 3)
             if self.curr_instr['Op'].name in self.alu_op.keys():
                 self.curr_instr['is_alu'] = True
             elif self.curr_instr['Op'].name in self.branch_op.keys():
                 self.curr_instr['is_branch'] = True
             elif self.curr_instr['Op'].name in self.mem_op.keys():
                 self.curr_instr['is_mem_access'] = True
+    
+        # get varibales from stack if not squashed
+        if not self.todo_op['squash'] and self.curr_instr['Op'].name in decode_handler.function_map:
+            func = self.curr_instr['Op'].name
+            self.curr_instr = self.function_map[func](self.curr_instr)
 
-            if self.curr_instr['Op'].name in decode_handler.function_map:
-                func = self.curr_instr['Op'].name
-                self.curr_instr = self.function_map[func](self.curr_instr)
+        print( 'DECODE', self.curr_instr )
         return self.curr_instr
 
     def decode_forward_pass(self, todo_op):
         decoded_instr = self.curr_instr.copy()
         if self.status == StageState.STALL:
             return self.new_instr.copy()
-        self.todo_opcode = todo_op
+        self.todo_op = todo_op
         return decoded_instr
 
     def decode_back_pass(self, execute_status):
-        if self.status == StageState.STALL:
-            return self.new_instr.copy()
-        self.decode(self.todo_opcode)
-        self.status = execute_status
-        return self.status
+        self.status = execute_status['status']
+        self.todo_op['squash'] = self.todo_op['squash'] or execute_status['squash'] 
+        # only decode if idle
+        if self.status == StageState.IDLE:
+            self.decode( )
+        return { 'status': self.status, 'squash': execute_status['squash'] }

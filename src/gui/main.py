@@ -63,7 +63,7 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
             registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP, self.pipeline.cycle ) )
 
         stack_list = registers.STACK.stack[ : registers.STACK.top_index + 1 ]
-        self.stackView.setModel( view_models.StackModel( stack_list ) )
+        self.stackView.setModel( view_models.StackModel( stack_list[ : : -1 ] ) )
 
     def step( self ):
         '''step through one cycle'''
