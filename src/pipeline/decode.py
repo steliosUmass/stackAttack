@@ -30,6 +30,7 @@ class Decode:
             'squash': False
         }
         self.curr_instr = self.new_instr.copy()
+        self.todo_opcode = 48
 
     def decode(self, op):
         self.curr_instr = self.new_instr.copy()
@@ -55,12 +56,16 @@ class Decode:
                 self.curr_instr = self.function_map[func](self.curr_instr)
         return self.curr_instr
 
-    def decode_forward_pass(self, curr_instr):
-        # self.status = StageState.IDLE
+    def decode_forward_pass(self, todo_op):
+        decoded_instr = self.curr_instr.copy()
         if self.status == StageState.STALL:
             return self.new_instr.copy()
-        return self.decode(curr_instr)
+        self.todo_opcode = todo_op
+        return decoded_instr
 
     def decode_back_pass(self, execute_status):
+        if self.status == StageState.STALL:
+            return self.new_instr.copy()
+        self.decode(self.todo_opcode)
         self.status = execute_status
         return self.status
