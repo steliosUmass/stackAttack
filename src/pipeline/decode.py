@@ -31,7 +31,7 @@ class Decode:
             'squash': False
         }
         self.curr_instr = self.new_instr.copy()
-        self.todo_opcode = 48
+        self.todo_opcode = 48 + (2<<6)
 
     def decode(self, op):
         self.curr_instr = self.new_instr.copy()
