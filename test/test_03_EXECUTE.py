@@ -82,37 +82,43 @@ class TestExecute(unittest.TestCase):
 
     def test_EXECUTE_MEM_STR_32(self):
         store_val = 12
-        except_val = b'\x00\x00\x00\x0c'
-        address = 101
+        expect_val = b'\x00\x00\x00\x0c'
+        address = 27
 
         self.instr = self.decode(store_val)  # PUSH_VAL 12
         self.execute()
 
-        self.instr = {'Op': instructions.Op.POP,
-                      'Operand_1': None, 'Operand_2': None, 'Operand_3': None}
+        self.instr = self.decode(10 + (2 << 6))  # POP
         self.execute()
 
-        self.instr = {'Op': instructions.Op.STR_32,
-                      'Address': address, 'is_mem_access': True}
+        self.instr = self.decode(address)  # PUSH_VAL 27
+        self.execute()
+
+        self.instr = self.decode(4 + (2 << 6))  # STR_32
 
         while self.execute()['status'] == StageState.STALL:
             pass
 
         self.assertEqual(
-            registers.MEMORY.next_layer.mem[address//4][address % 4], except_val), "STR_32 failed"
-
+            registers.MEMORY.next_layer.mem[address//4][address % 4], expect_val), "STR_32 failed"
 
     def test_EXECUTE_MEM_LDR_32(self):
-        except_val = b'\x00\x00\x00\x0c'
-        address = 101
+        expect_val = b'\x00\x00\x00\x0c'
+        address = 27
 
         self.test_EXECUTE_MEM_STR_32()
 
-        self.instr = {'Op': instructions.Op.LDR_32,
-                      'Address': address, 'is_mem_access': True}
+        self.instr = self.decode(address)  # PUSH_VAL 27
+        self.execute()
+
+        self.instr = self.decode(3 + (2 << 6))  # LDR_3
+
         while self.execute()['status'] == StageState.STALL:
             pass
-        self.assertEqual(registers.MEMORY.mem[9][address % 4], except_val), "LDR_32 failed"
+
+        self.assertEqual(
+            registers.MEMORY.mem[6][address % 4], expect_val), "LDR_32 failed"
+
 
 if __name__ == '__main__':
     unittest.main()
