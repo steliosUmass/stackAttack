@@ -139,7 +139,8 @@ class Memory():
                     tag, index = self._calc_index_and_tag(address)
 
                     # check if hit
-                    if self.valid[index] and self.tag[index] == tag:
+                    print(self.tag[index] == tag)
+                    if self.valid[ index ] and int.from_bytes( self.tag[index], 'big') == tag: 
                         # hit
                         self.state = MemoryState.IDLE
                         return copy.deepcopy(self.mem[index])
@@ -210,7 +211,7 @@ class Memory():
                     # only update cache if it is on
                     if self.cache_on:
                         tag, index = self._calc_index_and_tag(address)
-                        if self.tag[index] == tag:
+                        if int.from_bytes( self.tag[index], 'big') == tag:
                             self.valid[index] = False
 
                 return status
