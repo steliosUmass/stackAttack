@@ -24,7 +24,7 @@ class Fetch:
         self.status = StageState.STALL
 
         # if offset is not zero ( and no squash ) then we have the current IR buffered
-        if self.offset > 0 and self.instr_buff_valid:
+        if self.instr_buff_valid:
             return self.instr_buff
         return registers.MEMORY.read(address, Users.FETCH)
 
@@ -43,9 +43,9 @@ class Fetch:
                 self.should_squash = False
 
             load_data = self.load( self.address )
-            
             # Check if the memory or the decode stage is busy
             if load_data != MemoryState.BUSY and decode_state != StageState.STALL:
+                
                 # Set the fetch status to idle
                 self.status = StageState.IDLE
 
@@ -62,12 +62,11 @@ class Fetch:
 
                 # set IR buffer
                 self.instr_buff = load_data
-                self.instr_buff_valid = True
+                self.instr_buff_valid = registers.INSTR_OFFSET > 0
 
-                # reset state
+                # reset state and return instr object
                 instr_obj = { 'instr': load_data_pc_offset, 'squash' : self.should_squash }
                 self.reading = False
-                self.should_squash = False
                 return instr_obj
 
 
@@ -75,7 +74,6 @@ class Fetch:
         return { 'instr': (45 + (2<<6)), 'squash': False }
 
     def fetch_back_pass(self, decode_status):
-        print( decode_status )
         if decode_status['status'] == StageState.STALL:
             self.status = StageState.STALL
         if decode_status.get( 'squash', False ):
@@ -86,5 +84,4 @@ class Fetch:
 
     def fetch_forward_pass(self, decode_status, should_issue):
         a = self.fetch(decode_state=decode_status['status'], should_issue=should_issue) 
-        print( 'FETCH', a )
         return a
