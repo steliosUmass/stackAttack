@@ -62,7 +62,6 @@ class Decode:
             func = self.curr_instr['Op'].name
             self.curr_instr = self.function_map[func](self.curr_instr)
 
-        print( 'DECODE', self.curr_instr )
         return self.curr_instr
 
     def decode_forward_pass(self, todo_op):
