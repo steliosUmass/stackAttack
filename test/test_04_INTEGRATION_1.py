@@ -23,11 +23,13 @@ class TestIntegration(unittest.TestCase):
         self.fetch = Fetch()
         self.empty_stack = [0] * 32
         self.new_instr = {
-            'type': 0,
+            'type': 1,
             'Op': Op.NOOP,
             'Operand_1': None,
             'Operand_2': None,
             'Operand_3': None,
+            'Address': None,
+            'Condition': None,
             'is_alu': False,
             'is_branch': False,
             'is_mem_access': False,
@@ -36,7 +38,7 @@ class TestIntegration(unittest.TestCase):
         registers.STACK.stack = self.empty_stack.copy()
 
     def test_FETCH_DECODE(self):
-        write_val = 2189635600  # PUSH_VAL 2, PUSH_VAL 3, NOOP, ADD
+        write_val = 33796240  # PUSH_VAL 2, PUSH_VAL 3, NOOP, ADD
         for i in range(5):
             registers.MEMORY.write(
                 registers.PC, int(write_val).to_bytes(4, 'big'), Users.FETCH)
@@ -49,12 +51,12 @@ class TestIntegration(unittest.TestCase):
             execute_status = self.execute.execute_back_pass()
             decode_status = self.decode.decode_back_pass(execute_status)
             self.fetch.fetch_back_pass(decode_status)
-            todo_instr = self.fetch.fetch_forward_pass(decode_status)
+            todo_instr = self.fetch.fetch_forward_pass(decode_status, True)
             curr_instr = self.decode.decode_forward_pass(todo_instr)
             self.execute.execute_forward_pass(curr_instr)
-            print("\nPC", registers.PC, "OFFSET:", registers.INSTR_OFFSET)
-            print("INSTR:", curr_instr['Op'], curr_instr['Operand_1'])
-            print("STACK:", registers.STACK)
+            # print("\nPC", registers.PC, "OFFSET:", registers.INSTR_OFFSET)
+            # print("INSTR:", curr_instr['Op'], curr_instr['Operand_1'])
+            # print("STACK:", registers.STACK)
             self.assertEqual(registers.STACK.__str__(),
                              expect_output[i]), "Execute back pass failed"
 

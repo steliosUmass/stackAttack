@@ -22,7 +22,7 @@ class TestExecute(unittest.TestCase):
 
         def execute():
             self.execute_stage.execute_forward_pass(self.instr)
-            self.execute_stage.execute_back_pass()
+            return self.execute_stage.execute_back_pass()
         self.execute = execute
         self.decode = Decode().decode
         self.fetch = Fetch().fetch
@@ -79,6 +79,45 @@ class TestExecute(unittest.TestCase):
         self.assertEqual(registers.PC, expect_pc), "JMP_IF_0 failed"
         self.assertEqual(registers.INSTR_OFFSET,
                          expect_instr_offset), "JMP_IF_0 failed"
+
+    def test_EXECUTE_MEM_STR_32(self):
+        store_val = 12
+        expect_val = b'\x00\x00\x00\x0c'
+        address = 27
+
+        self.instr = self.decode(store_val)  # PUSH_VAL 12
+        self.execute()
+
+        self.instr = self.decode(10 + (2 << 6))  # POP
+        self.execute()
+
+        self.instr = self.decode(address)  # PUSH_VAL 27
+        self.execute()
+
+        self.instr = self.decode(4 + (2 << 6))  # STR_32
+
+        while self.execute()['status'] == StageState.STALL:
+            pass
+
+        self.assertEqual(
+            registers.MEMORY.next_layer.mem[address//4][address % 4], expect_val), "STR_32 failed"
+
+    def test_EXECUTE_MEM_LDR_32(self):
+        expect_val = b'\x00\x00\x00\x0c'
+        address = 27
+
+        self.test_EXECUTE_MEM_STR_32()
+
+        self.instr = self.decode(address)  # PUSH_VAL 27
+        self.execute()
+
+        self.instr = self.decode(3 + (2 << 6))  # LDR_3
+
+        while self.execute()['status'] == StageState.STALL:
+            pass
+
+        self.assertEqual(
+            registers.MEMORY.mem[6][address % 4], expect_val), "LDR_32 failed"
 
 
 if __name__ == '__main__':
