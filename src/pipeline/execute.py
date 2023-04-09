@@ -1,7 +1,7 @@
 from memory import MemoryState
 from stage_state import StageState
-import pipeline_options 
 import instructions
+import registers 
 
 class ExecuteStage():
     """
@@ -65,7 +65,7 @@ class ExecuteStage():
                 )
 
         self.status = StageState.IDLE if mem_status !=  MemoryState.BUSY else StageState.STALL
-        
+        print( registers.STACK ) 
         # return status from Execute to decode
         return { 
                 'squash': squash, 
@@ -84,7 +84,6 @@ class ExecuteStage():
 
 if __name__ == '__main__':
     import registers
-    import pipeline_options
     registers.MEMORY.set_cache( False )
     e = ExecuteStage()
     print( e.execute_back_pass() )
