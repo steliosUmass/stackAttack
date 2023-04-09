@@ -72,7 +72,7 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
     
     def run( self ):
         '''runs simulation untill halt instr is reached'''
-        self.pipeline.step( )
+        self.pipeline.run( )
         self.update_gui( ) 
 
     def index_changed_memCombo( self, index ):
