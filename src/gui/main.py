@@ -62,9 +62,7 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
         self.regView.setModel( view_models.RegisterModel( 
             registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP, self.pipeline.cycle ) )
 
-        stack_list = registers.STACK.stack[ : registers.STACK.top_index ] 
-        if registers.STACK.top_index  < 0:
-            stack_list = []
+        stack_list = registers.STACK.stack[ : registers.STACK.top_index + 1 ]
         self.stackView.setModel( view_models.StackModel( stack_list ) )
 
     def step( self ):
