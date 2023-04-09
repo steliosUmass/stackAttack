@@ -1,4 +1,5 @@
 from enum import Enum
+from math import ceil
 import copy
 
 
@@ -13,9 +14,7 @@ class Users(Enum):
 
 
 class Memory():
-    """
-    Used to simulate cache or RAM
-    num_lines : int
+    """ Used to simulate cache or RAM num_lines : int
         number of lines this memory holds
     line_length : int
         length of each line in words
@@ -60,7 +59,8 @@ class Memory():
         # we are cache, create valid array and tag array
         if next_layer is not None:
             self.valid = [False] * num_lines
-            self.tag = [ b'\x00' ] * num_lines
+            self.tag = [ int( 0 ).to_bytes( ceil( ( 16 - 
+                ( ( len( self.mem ) - 1).bit_length() +  ( self.line_length - 1 ).bit_length() ) ) / 8 ), 'big' ) ] * num_lines
 
             # if we are cache, get total memory space from next layer
             self.total_mem_space = next_layer.total_mem_space
@@ -116,6 +116,13 @@ class Memory():
         NotImplementedError
             raised if address is larger than amount of words
         '''
+        
+        # if cache is off go directly to upper level if cache
+        if self.next_layer is not None and not self.cache_on:
+            val = self.next_layer.read(address, stage )
+            return val
+
+
         if self.state == MemoryState.IDLE:
             if address > self.total_mem_space:
                 raise NotImplementedError
@@ -123,12 +130,8 @@ class Memory():
             self.access_stage = stage
             self.address = address
             self.state = MemoryState.BUSY
-
+        
         if stage == self.access_stage and address == self.address:
-            # if cache is off go directly to upper level if cache
-            if self.next_layer is not None and not self.cache_on:
-                val = self.next_layer.read(address, self.access_stage)
-                return val
             if self.access_counter < 1:
                 # if the next layer is not none, than this is cache
                 # check to see if we have it
@@ -147,7 +150,8 @@ class Memory():
                     # update cache
                     if val != MemoryState.BUSY:
                         self.valid[index] = True
-                        self.tag[index] = tag
+                        self.tag[index] = tag.to_bytes( ceil( ( 16 - 
+                            ( ( len( self.mem ) - 1).bit_length() +  ( self.line_length - 1 ).bit_length() ) ) / 8 ), 'big')
                         self.mem[index] = val
                         self.state = MemoryState.IDLE
                     
@@ -193,20 +197,21 @@ class Memory():
             self.access_stage = stage
             self.address = address
             self.state = MemoryState.BUSY
-
+        
         if stage == self.access_stage and address == self.address:
             # if the next layer is not none, than this is cache
             # we want to write to ram so call write to next layer
             if self.next_layer is not None:
                 status = self.next_layer.write(address, value, stage)
 
-                # only update cache if it is on
-                if self.cache_on and status == MemoryState.IDLE:
+                if status == MemoryState.IDLE:
                     self.state = MemoryState.IDLE
-
-                    tag, index = self._calc_index_and_tag(address)
-                    if self.tag[index] == tag:
-                        self.valid[index] = False
+                    
+                    # only update cache if it is on
+                    if self.cache_on:
+                        tag, index = self._calc_index_and_tag(address)
+                        if self.tag[index] == tag:
+                            self.valid[index] = False
 
                 return status
 
