@@ -1,7 +1,6 @@
 import registers
 
 def DUP(curr_instr):
-    print( registers.STACK )
     curr_instr['Operand_1'] = registers.STACK.stack[ registers.STACK.top_index ]
     return curr_instr
 
