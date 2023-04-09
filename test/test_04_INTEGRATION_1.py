@@ -43,19 +43,18 @@ class TestIntegration(unittest.TestCase):
 
         # print("\nExecuting \n\nPUSH_VAL 2\nPUSH_VAL 3\nADD")
         expect_output = ['[]', '[]', '[]', '[]',
-                         '[]', '[2]', '[2, 3]', '[]', '[5]']
+                         '[]', '[]', '[2]', '[2, 3]', '[]', '[5]']
 
-        for i in range(9):
+        for i in range(10):
             execute_status = self.execute.execute_back_pass()
             decode_status = self.decode.decode_back_pass(execute_status)
             self.fetch.fetch_back_pass(decode_status)
-            curr_opcode = self.fetch.fetch_forward_pass(decode_status)
-            curr_instr = self.decode.decode_forward_pass(curr_opcode)
+            todo_instr = self.fetch.fetch_forward_pass(decode_status)
+            curr_instr = self.decode.decode_forward_pass(todo_instr)
             self.execute.execute_forward_pass(curr_instr)
-            # print("\nPC", registers.PC, "OFFSET:", registers.INSTR_OFFSET)
-            # print(curr_instr)
-            # print("INSTR:", curr_instr['Op'], curr_instr['Operand_1'])
-            # print("STACK:", registers.STACK)
+            print("\nPC", registers.PC, "OFFSET:", registers.INSTR_OFFSET)
+            print("INSTR:", curr_instr['Op'], curr_instr['Operand_1'])
+            print("STACK:", registers.STACK)
             self.assertEqual(registers.STACK.__str__(),
                              expect_output[i]), "Execute back pass failed"
 
