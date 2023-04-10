@@ -52,6 +52,11 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
         # add signal for step sim
         self.stepButton.clicked.connect( self.step )
 
+        # update pipeline status
+        self.fetchView.setModel( view_models.PipeLineModel( self.pipeline.fetch.get_state(), 'Fetch' ) )
+        self.decodeView.setModel( view_models.PipeLineModel( self.pipeline.decode.get_state(), 'Decode' ) )
+        self.executeView.setModel( view_models.PipeLineModel( self.pipeline.execute.get_state(), 'Execute' ) )
+
         
     def update_gui( self ):
         '''updates the gui with the current state of the simulator'''
@@ -62,8 +67,15 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
         self.regView.setModel( view_models.RegisterModel( 
             registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP, self.pipeline.cycle ) )
 
+        # update stack
         stack_list = registers.STACK.stack[ : registers.STACK.top_index + 1 ]
         self.stackView.setModel( view_models.StackModel( stack_list[ : : -1 ] ) )
+
+        # update pipeline status
+        self.fetchView.setModel( view_models.PipeLineModel( self.pipeline.fetch.get_state(), 'Fetch' ) )
+        self.decodeView.setModel( view_models.PipeLineModel( self.pipeline.decode.get_state(), 'Decode' ) )
+        self.executeView.setModel( view_models.PipeLineModel( self.pipeline.execute.get_state(), 'Execute' ) )
+
 
     def step( self ):
         '''step through one cycle'''
