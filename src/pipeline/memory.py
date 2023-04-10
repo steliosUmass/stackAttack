@@ -139,7 +139,6 @@ class Memory():
                     tag, index = self._calc_index_and_tag(address)
 
                     # check if hit
-                    print(self.tag[index] == tag)
                     if self.valid[ index ] and int.from_bytes( self.tag[index], 'big') == tag: 
                         # hit
                         self.state = MemoryState.IDLE

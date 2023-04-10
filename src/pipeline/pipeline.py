@@ -32,11 +32,6 @@ class PipeLine():
         self.fetch.fetch_back_pass( decode_status )
         curr_opcode = self.fetch.fetch_forward_pass(decode_status, should_issue )
         curr_instr = self.decode.decode_forward_pass(curr_opcode)
-        print( curr_opcode )
-        print( curr_instr )
-        print( self.execute.curr_instr )
-        print()
-        print()
         self.execute.execute_forward_pass(curr_instr)
         
         # increment cycle
