@@ -34,8 +34,10 @@ def alu_op( op,  operand_1, operand_2, operand_3 ):
 
     '''
     result_val = None
-    if op in ( Op.PUSH_VAL, Op.DUP ):
+    if op == Op.PUSH_VAL:
         result_val = operand_1
+    elif op == Op.DUP:
+        result_val = registers.STACK.stack[ registers.STACK.top_index - operand_1 ]
     elif op == Op.ADD:
         result_val = operand_1 + operand_2
     elif op == Op.EQ:

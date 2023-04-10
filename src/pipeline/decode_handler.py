@@ -1,9 +1,5 @@
 import registers
 
-def DUP(curr_instr):
-    curr_instr['Operand_1'] = registers.STACK.stack[ registers.STACK.top_index ]
-    return curr_instr
-
 def POP_2(curr_instr):
     curr_instr['Operand_1'] = registers.STACK.remove()
     curr_instr['Operand_2'] = registers.STACK.remove()
@@ -27,7 +23,6 @@ def JMP(curr_instr):
     return curr_instr
 
 function_map = {
-    "DUP": DUP,
     "ADD": POP_2,
     "SUB": POP_2,
     "EQ": POP_2,
