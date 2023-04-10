@@ -115,3 +115,14 @@ class StackModel( QtCore.QAbstractListModel  ):
     def rowCount(self, index):
         # The length of the outer list.
         return len(self._data)
+
+class PipeLineModel( QtCore.QAbstractListModel  ):
+    def __init__(self, data, header ):
+        super(PipeLineModel, self).__init__()
+        self._data = [ header ] + data
+    
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            return self._data[ index.row() ] 
+    def rowCount(self, index):
+        return len( self._data )
