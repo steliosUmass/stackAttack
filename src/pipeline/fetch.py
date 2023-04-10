@@ -10,12 +10,13 @@ class Fetch:
         self.status = StageState.IDLE
         self.address = 0
         self.offset = 0
-        self.instr_buff = 0
+        self.instr_buff = b'\x00'
         self.instr_buff_valid = False
         self.should_squash = False
+        self.issued_instr = None
         self.reading = False
         self.instr_per_word = 4
-
+        self.should_issue = True
     def load(self, address):
         # When the address is not in the cache it will return BUSY and stall the pipeline
         # else it will return the data and continue the pipeline
@@ -65,13 +66,14 @@ class Fetch:
                 self.instr_buff_valid = registers.INSTR_OFFSET > 0
 
                 # reset state and return instr object
-                instr_obj = { 'instr': load_data_pc_offset, 'squash' : self.should_squash }
+                self.issued_instr = { 'instr': load_data_pc_offset, 'squash' : self.should_squash }
                 self.reading = False
-                return instr_obj
-
+                return self.issued_instr
 
         # If the memory or the decode stage is busy, return Op.NOOP
-        return { 'instr': (45 + (2<<6)), 'squash': False }
+        self.issued_instr = { 'instr': (45 + (2<<6)), 'squash': self.should_squash }
+        self.should_issue = should_issue
+        return self.issued_instr
 
     def fetch_back_pass(self, decode_status):
         if decode_status['status'] == StageState.STALL:
@@ -83,5 +85,12 @@ class Fetch:
         return decode_status
 
     def fetch_forward_pass(self, decode_status, should_issue):
-        a = self.fetch(decode_state=decode_status['status'], should_issue=should_issue) 
-        return a
+        return self.fetch(decode_state=decode_status['status'], should_issue=should_issue) 
+    def get_state( self ):
+        return [
+                'Status: {}'.format( self.status.name ),
+                'Reading: {}'.format( 'Yes' if self.reading else 'No' ),
+                'Instru Buffer: {} {}'.format( self.instr_buff.hex(), 'Valid' if self.instr_buff_valid  else 'Invalid' ), 
+                'Will Squash: {}'.format( 'Yes' if self.should_squash  else 'No' ),
+                'Issued Instr {}'.format( hex( self.issued_instr[ 'instr' ] )  if self.issued_instr else '' )
+        ]

@@ -19,17 +19,22 @@ class ExecuteStage():
                 'Op': instructions.Op.NOOP,
                 'Operand_1': None,
                 'Operand_2': None,
-                'Operand_3': None
+                'Operand_3': None,
+                'is_alu': False,
+                'is_mem_access': False,
+                'is_branch': False
         }
         self.status = StageState.IDLE
-
+        self.squash = False
+        self.last_executed = self.curr_instr 
     def execute_back_pass( self ):
         '''
         execute the backwards pass of the pipe
         this is where the operations get executed
         '''
         mem_status = None 
-        squash = False
+        self.squash = False
+        self.last_executed = self.curr_instr
 
         # check to see if current instruction should be squashed
 
@@ -38,14 +43,14 @@ class ExecuteStage():
             # if instruction is halt, return with finish flag
             if self.curr_instr[ 'Op' ] == instructions.Op.HALT:
                return { 
-                    'squash': squash, 
+                    'squash': self.squash, 
                     'status':  self.status,
                     'finish': True
             }
 
             # instruction is a branch 
             if self.curr_instr.get( 'is_branch', False ):
-                squash = instructions.branch_op( 
+                self.squash = instructions.branch_op( 
                         self.curr_instr[ 'Op' ], 
                         self.curr_instr[ 'Condition' ], 
                         self.curr_instr[ 'Address' ],
@@ -68,7 +73,7 @@ class ExecuteStage():
         
         # return status from Execute to decode
         return { 
-                'squash': squash, 
+                'squash': self.squash, 
                 'status':  self.status
         }
     
@@ -82,6 +87,21 @@ class ExecuteStage():
         if self.status == StageState.IDLE:
             self.curr_instr = instr
 
+    def get_state( self ):
+        state = [ 'Status: {}'.format( self.status.name ), 'Will Send Squash: {}'.format( 'Yes' if self.squash  else 'No' ) ]
+        
+        if self.last_executed[ 'is_alu' ]:
+            state.append( 'instr: OP: {} {} {} {}'.format( self.last_executed[ 'Op' ].name, 
+                str( self.last_executed[ 'Operand_1' ] ), str( self.last_executed[ 'Operand_2' ] ), str( self.last_executed[ 'Operand_3' ] ) ) )
+        elif self.last_executed[ 'is_mem_access' ]:
+            state.append( 'instr: OP: {} Addr: {}'.format( self.last_executed[ 'Op' ].name, 
+                str( self.last_executed[ 'Address' ] ) ) )
+        elif self.last_executed['is_branch']:
+            state.append( 'instr: OP: {} Cond: {} Addr: {} Offset: {}'.format( self.last_executed[ 'Op' ].name, 
+                str( self.last_executed[ 'Condition' ] ) , str( self.last_executed[ 'Address' ] ), str( self.last_executed[ 'Instr_offset' ] ) ) )
+        else:
+            state.append( 'instr: OP: {}'.format( self.last_executed[ 'Op' ].name ) )
+        return state
 if __name__ == '__main__':
     import registers
     registers.MEMORY.set_cache( False )

@@ -32,6 +32,7 @@ class Decode:
         }
         self.curr_instr = self.new_instr.copy()
         self.todo_op = { 'instr': 45 + 2**7, 'squash': False }
+        self.status = StageState.IDLE
 
     def decode(self  ):
         self.curr_instr = self.new_instr.copy()
@@ -47,6 +48,8 @@ class Decode:
             self.curr_instr['Op'] = Op((op >> 5) & 0x3 )
             # Pulls out bits 0-4 to get the operand
             self.curr_instr['Operand_1'] = op & 0x1F
+
+            self.curr_instr['is_alu'] = True
         else:
             # Pulls out bits 0-6 to get the OPCODE
             self.curr_instr['Op'] = Op( ( op & 0x7F ) + 3)
@@ -73,8 +76,25 @@ class Decode:
 
     def decode_back_pass(self, execute_status):
         self.status = execute_status['status']
-        self.todo_op['squash'] = self.todo_op['squash'] or execute_status['squash'] 
+        self.todo_op['squash'] = self.todo_op['squash'] or execute_status['squash']
         # only decode if idle
         if self.status == StageState.IDLE:
             self.decode( )
         return { 'status': self.status, 'squash': execute_status['squash'] }
+   
+    def get_state( self ):
+        state = [ 'State: {}'.format( self.status.name ), 'Will Squash: {}'.format( 'Yes' if  self.curr_instr['squash']   else 'No' ) ]
+
+        if self.curr_instr[ 'is_alu' ]:
+            state.append( 'instr: OP: {} {} {} {}'.format( self.curr_instr[ 'Op' ].name, 
+                str( self.curr_instr[ 'Operand_1' ] ), str( self.curr_instr[ 'Operand_2' ] ), str( self.curr_instr[ 'Operand_3' ] ) ) )
+        elif self.curr_instr[ 'is_mem_access' ]:
+            state.append( 'instr: OP: {} Addr: {}'.format( self.curr_instr[ 'Op' ].name, 
+                str( self.curr_instr[ 'Address' ] ) ) )
+        elif self.curr_instr['is_branch']:
+            state.append( 'instr: OP: {} Cond: {} Addr: {} Offset: {}'.format( self.curr_instr[ 'Op' ].name, 
+                str( self.curr_instr[ 'Condition' ] ) , str( self.curr_instr[ 'Address' ] ), str( self.curr_instr[ 'Instr_offset' ] ) ) )
+        else:
+            state.append( 'instr: OP: {}'.format( self.curr_instr[ 'Op' ].name ) )
+        return state
+
