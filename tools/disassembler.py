@@ -1,27 +1,21 @@
+import pickle 
+import json
+import sys
+import os 
 
 def dissassemble( file_name ):
-    instr_mapping = {
-            0: 'PUSH_VAL',
-            2**6: 'DUP',
-            2**7: 'LDR_32',
-            2**7 + 1: 'STR_32',
-            2**7 + 6: 'PUSH',
-            2**7 + 7: 'POP',
-            2**7 + 9: 'JMP_IF_1',
-            2**7 + 10: 'JMP_IF_0',
-            2**7  + 13: 'ADD',
-            2**7 + 22: 'EQ',
-            2**7 + 45: 'NOOP',
-            2**7 + 46: 'HALT'
-    }
-   
+    instr_mapping = None
+    with open( os.path.join( os.path.dirname(  os.path.realpath( __file__ ) ), 'instr_mapping.json' ), 'r' ) as f:
+        instr_mapping = { v:k for k, v in json.load( f ).items() }
+    
     instr_list = []
     b = None
     with open( file_name, 'rb' ) as f:
-            b = bytearray( f.read() )
-   
-    for i in range( len( b ) ):
-        val = b[ i ]
+            b = pickle.load( f )
+  
+    b_arr = b[0]
+    for i in range( len( b_arr ) ):
+        val = b_arr[ i ]
         # if type 0, extract literal
         if val < 2**7:
             instr = instr_mapping[ val & 224 ]
@@ -35,3 +29,6 @@ def dissassemble( file_name ):
             instr_list.append( instr_mapping[ val ] )
             
     return instr_list
+
+if __name__ == '__main__':
+    print( dissassemble( sys.argv[1] ) )
