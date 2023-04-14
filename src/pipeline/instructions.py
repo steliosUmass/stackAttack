@@ -13,6 +13,7 @@ class Op( Enum ):
     JMP_IF_0 = 13
     ADD = 16
     EQ = 25
+    L_SHIFT = 32
     NOOP = 48 
     HALT = 49
 
@@ -34,6 +35,14 @@ def alu_op( op,  operand_1, operand_2, operand_3 ):
 
     '''
     result_val = None
+    # modifiy operands to be 32 bit only
+    if operand_1:
+        operand_1 = operand_1 & 0xFFFF
+    if operand_2:
+        operand_2 = operand_2 & 0xFFFF
+    if operand_3:
+        operand_3 = operand_3 & 0xFFFF
+
     if op == Op.PUSH_VAL:
         result_val = operand_1
     elif op == Op.DUP:
@@ -46,6 +55,8 @@ def alu_op( op,  operand_1, operand_2, operand_3 ):
         registers.STACK.push( registers.PUSH )
     elif op == Op.POP:
         registers.STACK.pop()
+    elif op == Op.L_SHIFT:
+        result_val = operand_2 << operand_1
     if result_val is not None:
         registers.STACK.push( result_val )
 

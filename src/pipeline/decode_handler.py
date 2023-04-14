@@ -26,6 +26,7 @@ function_map = {
     "ADD": POP_2,
     "SUB": POP_2,
     "EQ": POP_2,
+    "L_SHIFT": POP_2,
     "LDR_32": MEM_ACCESS,
     "STR_32": MEM_ACCESS,
     "JMP_IF_1": JMP,
