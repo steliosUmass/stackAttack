@@ -8,6 +8,7 @@ import view_models
 import sim_gui
 import sys
 import os
+import pickle
 
 # Add pipeline directory to path
 sys.path.insert( 0, os.path.join( os.path.dirname( os.path.dirname(  os.path.realpath( __file__ ) ) ), 'pipeline' ) )
@@ -114,29 +115,38 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
         '''loads a binary file into main memory and updates gui to reflect changes'''
         initial_dir = os.path.dirname( os.path.dirname( os.path.dirname(  os.path.realpath( __file__ ) ) ) )
         file_name = filedialog.askopenfilename( initialdir = initial_dir, title = "Select Program" )
-        b = None
+        prog = None
         with open( file_name, 'rb' ) as f:
-            b = bytearray( f.read() )
+            prog = pickle.load( f )
        
-        mem_index = 0
-        for i in range( 0, len( b ), 4 ):
-            val = None
-            if i + 4 > len(b):
-                val = bytearray( b[ i: ] )
-                pad_num = 4 - ( len( b ) - i ) 
-                for _ in range( pad_num ):
-                    val.append( 0 ) 
-                val = bytes( val )
+        
+        # for each item in dict
+        # go through
+        for addr, b in prog.items():
+            if addr == 'symbol_table':
+                self.symbol_table = b
             else:
-                val = bytes( b[ i: i + 4 ] )
-           
-            # put value in RAM
-            registers.MEMORY.next_layer.mem[ mem_index // 4 ][ mem_index % 4 ] = val
-            mem_index += 1
+                print( addr, b )
+                mem_index = 0
+                for i in range( 0, len( b ), 4 ):
+                    val = None
+                    # pad with zero if less than 4
+                    if i + 4 > len(b):
+                        val = bytearray( b[ i: ] )
+                        pad_num = 4 - ( len( b ) - i ) 
+                        for _ in range( pad_num ):
+                            val.append( 0 ) 
+                        val = bytes( val )
+                    else:
+                        val = bytes( b[ i: i + 4 ] )
+                   
+                    # put value in RAM
+                    registers.MEMORY.next_layer.mem[ ( addr + mem_index ) // 4 ][ mem_index % 4 ] = val
+                    mem_index += 1
 
         # refresh gui with program 
         self.index_changed_memCombo( self.memCombo.currentIndex() )
-        self.InstrView.setModel( view_models.InstrModel( dissassemble( file_name ) ) )
+        #self.InstrView.setModel( view_models.InstrModel( dissassemble( file_name ) ) )
 
 def main():
     app = QApplication(sys.argv)
