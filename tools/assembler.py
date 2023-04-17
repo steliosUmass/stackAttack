@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import pickle
+import re
 
 # read mapping of instructions to bytes
 instr_mapping = None
@@ -17,15 +18,16 @@ def gen_type_0_ops( val, op ):
     if op in [ 'DUP', 'SWAP' ]:
         if val > 31:
             raise ValueError( 'cannot have value greater than 31 for DUP/SWAP' )
-        ops = [ instr_mapping[ op ] + val ]
+        ops = [ f"{ op } { val }" ]
     elif op == 'PUSH_VAL':
         if val > 2**128:
             raise ValueError( 'cannot push value greater than 2**32 for PUSH_VAL' )
 
        
-        # if val is zero, just return one push val
-        if val == 0:
-            ops.append( instr_mapping[ 'PUSH_VAL' ]  )
+        # if val fits in one push_val
+        # just push one instr 
+        if val < 32:
+            ops.append( f"PUSH_VAL { val }" )
         else:
 
             # the way this works is that we push the integer value 5 bits at a time
@@ -41,13 +43,13 @@ def gen_type_0_ops( val, op ):
                     # generate approperate push_val and shift
                     if shift_amount > 0:
                         temp = temp >> shift_amount
-                        ops.append( instr_mapping[ 'PUSH_VAL' ] + temp )
-                        ops.append( instr_mapping[ 'PUSH_VAL' ] + shift_amount )
-                        ops.append( instr_mapping[ 'L_SHIFT' ] )
+                        ops.append( f"PUSH_VAL { temp }" )
+                        ops.append( f"PUSH_VAL { shift_amount }" )
+                        ops.append( 'L_SHIFT' )
                     else:
-                        ops.append( instr_mapping[ 'PUSH_VAL' ] + temp )
+                        ops.append( f"PUSH_VAL { temp }" )
                     if need_add:
-                        ops.append( instr_mapping[ 'ADD' ] )
+                        ops.append( 'ADD' )
                     need_add = True
 
                 # decrement mask and shift amount
@@ -65,84 +67,168 @@ def main():
     with open( os.path.join( os.path.dirname(  os.path.realpath( __file__ ) ), 'instr_mapping.json' ), 'r' ) as f:
         instr_mapping = json.loads( f.read() )
 
-    # open file for first pass to fill symbol table
+    prog_lines = []
+    prog_index = 0
+    
+    # this dict keeps track of in index of lines that refernce 
+    # branching labels 
+    referenced_labels = {}
+    label_definitons = []
+    
+    # in this first pass, we open the file
+    # we expand push_val ops if needed
+    # we add any .VAR variables to the symbol table
+    # we add any labels to symbol table
+    # we do NOT expand label push values 
     with open( sys.argv[1], 'r') as f:
         for line in f.readlines():
-            line = line.split()
-            if len(line) == 0 or line[0] == '#':
+            line_split = line.split()
+            if len(line_split) == 0 or line_split[0][0] == '#':
                 continue
             
-            instr = line[0]
-            
+            instr = line_split[0]
 
             if instr == '.VAR':
-                symbol_table[ line[1] ] = parse_int( line[2] )
+                if instr in symbol_table.keys():
+                    raise Exception( f"Error: Cannot declare variable \"{ instr }\" after reference" )
+                symbol_table[ line_split[1] ] = parse_int( line_split[2] )
             elif instr == '.ADDR':
-                addr = parse_int( line[1] )
-                instr_counter = -1
-            elif instr not in instr_mapping.keys() and '.' != instr[ 0 ]:
-                instr = instr.strip( ':' )
-                symbol_table[ instr ] = ( addr + instr_counter // 4,  instr_counter % 4 )
-            
-            instr_counter += 1
-  
-    prog_dict = {}
-    addr = 0
-    
-    # open file to create ops
-    with open( sys.argv[1], 'r') as f:
-        for line in f.readlines():
-            line = line.split()
-            if len(line) == 0 or line[0] == '#':
-                continue
-           
-            # if there is a label, remove from line
-            if line[0].strip(':') in symbol_table.keys():
-                line = line[1:]
-           
-            instr = line[0]
-            val = line[1]
+                val = line_split[1]
+                if val in symbol_table.keys():
+                    val = symbol_table[ val ]
+                addr = parse_int( val )
+                instr_counter = 0
+                prog_lines.append( f".ADDR { val }" )
+                prog_index += 1
+            elif instr == '.LOAD':
+                prog_lines.append( line )
+            else:
+                if instr not in instr_mapping.keys() and '.' != instr[ 0 ]:
+                    # label definition found here
+                    instr = instr.strip( ':' )
+                    symbol_table[ instr ] = ( addr + prog_index // 4, prog_index % 4 )
+                    label_definitons.append( instr )
+                    line_split = line_split[ 1: ] 
+                    line = ' '.join(  line_split )
+                    instr = line_split[ 0 ]
+                if len( line_split ) > 1:
                     
-            # check if value is in symbol table
+                    val = line_split[1]
+                    # check if value is in symbol table
+                    if val in symbol_table.keys():
+                        val = symbol_table[ val ]
+                    if isinstance( val, tuple ) or re.search('[a-zA-Z]', str( val ) ) is not None:
+                        # this is a push_val branch
+                        # assume this will only generate 2 instructions for now
+                        prog_lines.append( line.strip( '\n' ) )
+                        if line_split[ 1 ] not in referenced_labels.keys():
+                            referenced_labels[ line_split[ 1 ] ] = []
+
+                        referenced_labels[ line_split[ 1 ] ].append( prog_index )
+                        prog_index += 2
+                        continue
+                    
+                    elif re.match( '0x[a-fA-F0-9]+|[0-9]+', str( val ) ) is not None:
+                        val = parse_int( val )
+                    
+                    ops = gen_type_0_ops( val, instr )
+                    prog_index += len( ops )
+                    prog_lines.extend( ops )
+                else:
+                    prog_lines.append( instr )
+                    prog_index += 1
+
+    # now we go through all the "PUSH_VAL branch" 
+    # and we replace the label with PUSH_VAL OFFSET PUSH_VAL PC
+    # we also check to see if the PC can fit in the 5 bit literal
+    # if not we expand the operation and we need to modify the address 
+    # of following labels
+    # this process continues until things don't change
+
+    num_pc_bits = {}
+    ops_needed_for_push = {}
+    # now, expand the values being pushed
+    for label in label_definitons:
+        num_pc_bits[ label ] = 5
+        ops_needed_for_push[ label ] = 1
+     
+    did_change = True
+    while did_change:
+        did_change = False
+        
+        for label in label_definitons:
+            pc = symbol_table[ label ][ 0 ] 
+            # check if bit length cannot fit in currently allocated bit length
+            if pc.bit_length() > num_pc_bits[ label ]:
+                
+                did_change = True
+                # increment number of pc bits needed
+                num_pc_bits[ label ] += 5
+                # for new address, get number of ops needed to push pc
+                ops_needed_for_push[ label ] = gen_type_0_ops( pc, 'PUSH_VAL' ) - ops_needed_for_push[ label ]
+
+
+                # change symbol table value for each label
+                for label_2 in label_definitions:
+                    if label_2 == label:
+                        continue
+                    # check to see how many push_val operations are before label def
+                    operations_before = 0
+                    for ref in referenced_labels[ label ]:
+                        if ref < symbol_table[ label_2 ][ 0 ] * 4 + symbol_table[ label_2 ][ 1 ]:
+                            operations_before += 1
+                            
+                    # for each label def, add the number of additonal ops * operations_before to get new address
+                    symbol_table[ label_2 ] = ( ( operations_before * ops_needed_for_push[ label ] ) // 4, 
+                            ( operations_before * ops_needed_for_push[ label ] ) % 4 )
+
+    prog_dict = {}
+    instr_bytes = bytearray()
+    addr = 0
+    # open file to create ops
+    for line in prog_lines:
+        line_split = line.split()
+        instr = line_split[0]
+        
+        if instr in instr_mapping.keys():
+            ops = []
+            if instr == 'PUSH_VAL' and line_split[ 1 ] in symbol_table.keys():
+                # insert PUSH_VAL symbol table here
+                ops = ( gen_type_0_ops( symbol_table[ line_split[ 1 ] ][ 1 ], instr ) +
+                            gen_type_0_ops( symbol_table[ line_split[ 1 ]  ][ 0 ], instr ) )
+            else:
+                ops = [ line ]
+            
+            for op in ops:
+                op_split = op.split()
+                instr_byte = instr_mapping[ op_split[ 0 ] ]
+                if len( op_split ) > 1:
+                    instr_byte += parse_int( op_split[ 1 ] )
+                instr_bytes.append( instr_byte )                
+            
+        elif instr == '.LOAD':
+            for val in line_split[ 1: ]:
+                if val in symbol_table.keys():
+                    val = symbol_table[ val ]
+            
+                val = parse_int( val )
+                instr_bytes.extend( val.to_bytes( 4, 'big' ) ) 
+        
+        elif instr == '.ADDR':
+            # first save current instructions to load
+            # make sure instruction byte array is atleast full word
+            prog_dict[ addr ] = instr_bytes
+            
+            # change current address to load instr too
+            # reset byte array
+            # check if val is in symbol_table 
+            val = line_split[ 1 ]
             if val in symbol_table.keys():
                 val = symbol_table[ val ]
-            elif not isinstance( val, tuple ):
-                val = parse_int( val )
-                    
 
-            if instr in instr_mapping.keys():
-                ops = None
-                instr_byte = instr_mapping[ instr ]
-
-                # type 0 instructions
-                if instr_byte < 2**7:
-                    
-                    # check if value is tuple and instr is push back.
-                    # if thats the case generate two push val instructions 
-                    # one that pushes PC and other that pushes offset
-                    if isinstance( val, tuple ) and instr == 'PUSH_VAL':
-                        ops = ( gen_type_0_ops( parse_int( val[ 1 ] ), 'PUSH_VAL' ) + 
-                            gen_type_0_ops( parse_int( val[ 0 ] ), 'PUSH_VAL' ) )
-                    else:
-                        ops = gen_type_0_ops( val, instr )
-                
-                    for op in ops:
-                        instr_bytes.append( op )
-                else:              
-                    instr_bytes.append( instr_byte )                
-            
-            elif instr == '.LOAD':
-                instr_bytes = instr_bytes + val.to_bytes( ( val.bit_length() + 7 ) // 8,  'big' )
-
-            elif instr == '.ADDR':
-                # first save current instructions to load
-                # make sure instruction byte array is atleast full word
-                prog_dict[ addr ] = instr_bytes
-                
-                # change current address to load instr too
-                # reset byte array
-                addr = val
-                instr_bytes = bytearray()
+            val = parse_int( val )
+            addr = val
+            instr_bytes = bytearray()
     
     # final save 
     prog_dict[ addr ] = instr_bytes
@@ -153,10 +239,5 @@ def main():
     with open( sys.argv[ 2 ], 'wb' ) as f:
         pickle.dump( prog_dict, f )
 
-
-
-
-
-     
 if __name__ == '__main__':
     main()

@@ -20,11 +20,7 @@ def dissassemble( file_name ):
         if val < 2**7:
             instr = instr_mapping[ val & 224 ]
             literal = val & 31
-            if instr == 'PUSH_VAL':
-                instr_list.append( '{} {}'.format( instr , str( literal ) ))
-
-            else:
-                instr_list.append( instr )
+            instr_list.append( '{} {}'.format( instr , str( literal ) ))
         else:
             instr_list.append( instr_mapping[ val ] )
             
