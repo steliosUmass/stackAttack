@@ -4,15 +4,18 @@ import registers
 
 class Op( Enum ):
     PUSH_VAL = 0
+    SWAP = 1
     DUP = 2
     LDR_32 = 3
     STR_32 = 4
     PUSH = 9
     POP = 10
+    JMP = 11
     JMP_IF_1 = 12
     JMP_IF_0 = 13
     ADD = 16
     EQ = 25
+    LT = 30
     L_SHIFT = 32
     NOOP = 48 
     HALT = 49
@@ -47,10 +50,16 @@ def alu_op( op,  operand_1, operand_2, operand_3 ):
         result_val = operand_1
     elif op == Op.DUP:
         result_val = registers.STACK.stack[ registers.STACK.top_index - operand_1 ]
+    elif op == Op.SWAP:
+        ( registers.STACK.stack[ registers.STACK.top_index - operand_1 ],
+            registers.STACK.stack[ registers.STACK.top_index  ] ) = ( registers.STACK.stack[ registers.STACK.top_index  ],
+            registers.STACK.stack[ registers.STACK.top_index - operand_1 ] )
     elif op == Op.ADD:
         result_val = operand_1 + operand_2
     elif op == Op.EQ:
         result_val = 1 if operand_1 == operand_2 else 0
+    elif op == Op.LT:
+        result_val = 1 if operand_1 < operand_2 else 0
     elif op == Op.PUSH:
         registers.STACK.push( registers.PUSH )
     elif op == Op.POP:
@@ -80,14 +89,21 @@ def branch_op( op, condition, address, instr_offset ):
     squash:
         bool indicating if earlier instuctions in the pipe should be squashed
     '''
+    if condition:
+        # get least sign bit only
+        condition = condition & 1
     squash = False
     if op == Op.JMP_IF_1:
         if condition is not None and condition == 1:
             registers.PC = address
             registers.INSTR_OFFSET = instr_offset
             squash = True
-    if op == Op.JMP_IF_0:
+    elif op == Op.JMP_IF_0:
        if condition is not None and condition == 0:
+           registers.PC = address
+           registers.INSTR_OFFSET = instr_offset
+           squash = True
+    elif op == Op.JMP:
            registers.PC = address
            registers.INSTR_OFFSET = instr_offset
            squash = True
