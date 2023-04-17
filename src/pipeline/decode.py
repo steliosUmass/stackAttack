@@ -41,6 +41,9 @@ class Decode:
 
 
         # Pulls out bit 7 to get the type
+        if op == 128:
+            print( Op( ( op & 0x7F ) + 3) )
+
         self.curr_instr['type'] = op >> 7
 
         if self.curr_instr['type'] == 0:
