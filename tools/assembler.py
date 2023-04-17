@@ -165,22 +165,24 @@ def main():
                 # increment number of pc bits needed
                 num_pc_bits[ label ] += 5
                 # for new address, get number of ops needed to push pc
-                ops_needed_for_push[ label ] = gen_type_0_ops( pc, 'PUSH_VAL' ) - ops_needed_for_push[ label ]
+                ops_needed_for_push[ label ] = len( gen_type_0_ops( pc, 'PUSH_VAL' ) ) - ops_needed_for_push[ label ]
 
 
                 # change symbol table value for each label
-                for label_2 in label_definitions:
+                for label_2 in label_definitons:
                     if label_2 == label:
                         continue
                     # check to see how many push_val operations are before label def
                     operations_before = 0
                     for ref in referenced_labels[ label ]:
+                        print( label_2, ref, symbol_table[ label_2 ][ 0 ] * 4 + symbol_table[ label_2 ][ 1 ] )
                         if ref < symbol_table[ label_2 ][ 0 ] * 4 + symbol_table[ label_2 ][ 1 ]:
                             operations_before += 1
                             
                     # for each label def, add the number of additonal ops * operations_before to get new address
-                    symbol_table[ label_2 ] = ( ( operations_before * ops_needed_for_push[ label ] ) // 4, 
-                            ( operations_before * ops_needed_for_push[ label ] ) % 4 )
+                    addr_label_2 = symbol_table[ label_2 ][ 0 ] * 4 + symbol_table[ label_2 ][ 1 ]
+                    symbol_table[ label_2 ] = ( (  addr_label_2 + operations_before * ops_needed_for_push[ label ] ) // 4, 
+                            ( addr_label_2 + operations_before * ops_needed_for_push[ label ] ) % 4 )
 
     prog_dict = {}
     instr_bytes = bytearray()
