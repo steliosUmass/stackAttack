@@ -18,7 +18,7 @@ from pipeline import PipeLine
 import registers
 from disassembler import dissassemble
 
-class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_MainWindow):
+class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
     def __init__(self, parent=None):
         super(Simulator, self).__init__(parent)
         self.setupUi(self)
