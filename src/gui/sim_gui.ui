@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>simulator</class>
+ <widget class="QMainWindow" name="simulator">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -16,56 +16,187 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,5">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1,0,5">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <widget class="QLabel" name="label_9">
+        <property name="font">
+         <font>
+          <pointsize>30</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>StackAttack!</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>By Stelios and Shankar</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignHCenter|Qt::AlignTop</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="2,2,2,3">
         <item>
-         <widget class="QListView" name="fetchView"/>
+         <layout class="QVBoxLayout" name="verticalLayout_7">
+          <item>
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Fetch</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListView" name="fetchView"/>
+          </item>
+         </layout>
         </item>
         <item>
-         <widget class="QListView" name="decodeView"/>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <item>
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>Decode</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListView" name="decodeView"/>
+          </item>
+         </layout>
         </item>
         <item>
-         <widget class="QListView" name="executeView"/>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <item>
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Execute</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListView" name="executeView"/>
+          </item>
+         </layout>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
-           <widget class="QPushButton" name="stepButton">
+           <widget class="QLabel" name="label_10">
             <property name="text">
-             <string>Step</string>
+             <string>Control</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="LoadButton">
-            <property name="text">
-             <string>Load Program</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="runButton">
-            <property name="text">
-             <string>Run</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,0">
+           <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,1">
             <item>
-             <widget class="QCheckBox" name="cacheOn">
-              <property name="text">
-               <string>Cache On</string>
-              </property>
-             </widget>
+             <layout class="QVBoxLayout" name="verticalLayout_11" stretch="1,0,0">
+              <item>
+               <widget class="QLabel" name="label_15">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_9">
+                <item>
+                 <widget class="QCheckBox" name="cacheOn">
+                  <property name="text">
+                   <string>Cache On</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="pipeOn">
+                  <property name="text">
+                   <string>Pipeline On</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_14">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_7">
+                <item>
+                 <widget class="QLabel" name="label_11">
+                  <property name="text">
+                   <string>Set/Remove Break:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="lineEdit_2"/>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="breakSet">
+                  <property name="text">
+                   <string>Input</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
             </item>
             <item>
-             <widget class="QCheckBox" name="pipeOn">
-              <property name="text">
-               <string>Pipeline On</string>
-              </property>
-             </widget>
+             <layout class="QVBoxLayout" name="verticalLayout_10">
+              <item>
+               <widget class="QPushButton" name="LoadButton">
+                <property name="text">
+                 <string>Load Program</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_2">
+                <property name="text">
+                 <string>Clear Cache</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="stepButton">
+                <property name="text">
+                 <string>Step ►</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="runButton">
+                <property name="text">
+                 <string>Run ►►</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
           </item>
@@ -87,11 +218,46 @@
        </spacer>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1,1">
+       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,1,1">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
+         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0">
           <item>
-           <widget class="QComboBox" name="memCombo"/>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QComboBox" name="memCombo"/>
+            </item>
+            <item>
+             <widget class="QComboBox" name="repCombo"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,0,0,1">
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>Addr:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="lineEdit"/>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton">
+              <property name="text">
+               <string>Go</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <widget class="QTableView" name="memTable"/>
@@ -99,11 +265,11 @@
          </layout>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,1,0,2">
+         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,1,0,5,0,1">
           <item>
            <widget class="QLabel" name="label_3">
             <property name="text">
-             <string>Registers/ Running Info</string>
+             <string>Registers</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -128,6 +294,19 @@
           </item>
           <item>
            <widget class="QListView" name="stackView"/>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_13">
+            <property name="text">
+             <string>Info</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListView" name="listView"/>
           </item>
          </layout>
         </item>
