@@ -22,10 +22,29 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
     def __init__(self, parent=None):
         super(Simulator, self).__init__(parent)
         self.setupUi(self)
-
+        
+        
+        # current address that mem should be pointing to
+        self.current_mem_addr = 0
+        
+        #  add signal to change view of memory
+        self.addrGo.clicked.connect( self.change_addr_view )
+        
         # init combo box to choose between ram and cache
         self.memCombo.addItems( [ 'RAM', 'CACHE'] )
 
+        # init combo box to different format representations
+        self.memRepCombo.addItems( ['hex', 'binary', 'decimal' ] )
+        self.regCombo.addItems( ['hex', 'binary', 'decimal' ] )
+        self.stackComboBox.addItems( ['hex', 'binary', 'decimal' ] )
+
+        # add signal to change table based on rep
+        self.memRepCombo.currentIndexChanged.connect( lambda _: self.index_changed_memCombo( self.memCombo.currentIndex() ) )
+        self.regCombo.currentIndexChanged.connect( lambda _:  ( self.regView.setModel( view_models.RegisterModel( 
+                registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP, self.regCombo.currentText() ) ) ) )
+        self.stackComboBox.currentIndexChanged.connect( self.update_stack )
+
+        
         # set check state for cache on and pipeline on
         # also assign signals
         self.cacheOn.setChecked( True )
@@ -39,7 +58,7 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
 
         # init register table
         self.regView.setModel( view_models.RegisterModel( 
-            registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP, 0 ) )
+            registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP ) )
 
         # add signal to load program
         self.LoadButton.clicked.connect( self.load_program )           
@@ -54,28 +73,36 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         self.stepButton.clicked.connect( self.step )
 
         # update pipeline status
-        self.fetchView.setModel( view_models.PipeLineModel( self.pipeline.fetch.get_state(), 'Fetch' ) )
-        self.decodeView.setModel( view_models.PipeLineModel( self.pipeline.decode.get_state(), 'Decode' ) )
-        self.executeView.setModel( view_models.PipeLineModel( self.pipeline.execute.get_state(), 'Execute' ) )
+        self.fetchView.setModel( view_models.PipeLineModel( self.pipeline.fetch.get_state() ) )
+        self.decodeView.setModel( view_models.PipeLineModel( self.pipeline.decode.get_state() ) )
+        self.executeView.setModel( view_models.PipeLineModel( self.pipeline.execute.get_state() ) )
 
-        
+       
+    def change_addr_view( self ):
+        self.current_mem_addr = int( self.lineEditAddr.text().strip() )
+        self.index_changed_memCombo( self.memCombo.currentIndex() )
+
+    def update_stack( self ):
+        # update stack
+        stack_list = registers.STACK.stack[ : registers.STACK.top_index + 1 ]
+        self.stackView.setModel( view_models.StackModel( stack_list[ : : -1 ], val_format=self.stackComboBox.currentText() ) )
+
+
     def update_gui( self ):
         '''updates the gui with the current state of the simulator'''
         # update memory
         self.index_changed_memCombo( self.memCombo.currentIndex() )
-        
+       
+        self.update_stack()
+
         # update registers 
         self.regView.setModel( view_models.RegisterModel( 
-            registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP, self.pipeline.cycle ) )
-
-        # update stack
-        stack_list = registers.STACK.stack[ : registers.STACK.top_index + 1 ]
-        self.stackView.setModel( view_models.StackModel( stack_list[ : : -1 ] ) )
+            registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP, self.memRepCombo.currentText() ) )
 
         # update pipeline status
-        self.fetchView.setModel( view_models.PipeLineModel( self.pipeline.fetch.get_state(), 'Fetch' ) )
-        self.decodeView.setModel( view_models.PipeLineModel( self.pipeline.decode.get_state(), 'Decode' ) )
-        self.executeView.setModel( view_models.PipeLineModel( self.pipeline.execute.get_state(), 'Execute' ) )
+        self.fetchView.setModel( view_models.PipeLineModel( self.pipeline.fetch.get_state() ) )
+        self.decodeView.setModel( view_models.PipeLineModel( self.pipeline.decode.get_state() ) )
+        self.executeView.setModel( view_models.PipeLineModel( self.pipeline.execute.get_state() ) )
 
 
     def step( self ):
@@ -90,12 +117,23 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
 
     def index_changed_memCombo( self, index ):
         '''updates the mem table to show either cache or ram based on comboBox index'''
+        
+        # if in binary mode, set to resize contents
+        if self.memRepCombo.currentText() == 'binary':
+            self.memTable.horizontalHeader().setSectionResizeMode( QtWidgets.QHeaderView.ResizeToContents)
+        else:
+            self.memTable.horizontalHeader().setSectionResizeMode( QtWidgets.QHeaderView.Stretch )
+
         if index == 0:
             # show ram
-            self.memTable.setModel( view_models.RamModel( registers.MEMORY.next_layer.mem ) )
+            addr = self.current_mem_addr // 4
+            end_addr = addr + 20 if addr + 20 < len( registers.MEMORY.next_layer.mem ) else len( registers.MEMORY.next_layer.mem ) 
+            self.memTable.setModel( view_models.RamModel( registers.MEMORY.next_layer.mem[ addr: end_addr ],
+                self.current_mem_addr, val_format=self.memRepCombo.currentText() ) )
         elif index == 1:
             # show cache
-            self.memTable.setModel( view_models.CacheModel( registers.MEMORY.tag, registers.MEMORY.mem, registers.MEMORY.valid ) )
+            self.memTable.setModel( view_models.CacheModel( registers.MEMORY.tag, registers.MEMORY.mem, registers.MEMORY.valid,
+                val_format=self.memRepCombo.currentText()) )
 
     def set_cache_enable( self, state ):
         '''activates or disables cache'''

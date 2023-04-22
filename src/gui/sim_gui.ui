@@ -110,14 +110,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,1">
             <item>
-             <layout class="QVBoxLayout" name="verticalLayout_11" stretch="1,0,0">
-              <item>
-               <widget class="QLabel" name="label_15">
-                <property name="text">
-                 <string/>
-                </property>
-               </widget>
-              </item>
+             <layout class="QVBoxLayout" name="verticalLayout_11" stretch="0,0,0">
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_9">
                 <item>
@@ -148,12 +141,12 @@
                 <item>
                  <widget class="QLabel" name="label_11">
                   <property name="text">
-                   <string>Set/Remove Break:</string>
+                   <string>Set Break:</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="lineEdit_2"/>
+                 <widget class="QLineEdit" name="lineEditBreakPoint"/>
                 </item>
                 <item>
                  <widget class="QPushButton" name="breakSet">
@@ -163,6 +156,9 @@
                  </widget>
                 </item>
                </layout>
+              </item>
+              <item>
+               <widget class="QListWidget" name="listBreakPoints"/>
               </item>
              </layout>
             </item>
@@ -227,7 +223,7 @@
              <widget class="QComboBox" name="memCombo"/>
             </item>
             <item>
-             <widget class="QComboBox" name="repCombo"/>
+             <widget class="QComboBox" name="memRepCombo"/>
             </item>
            </layout>
           </item>
@@ -241,10 +237,10 @@
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit"/>
+             <widget class="QLineEdit" name="lineEditAddr"/>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton">
+             <widget class="QPushButton" name="addrGo">
               <property name="text">
                <string>Go</string>
               </property>
@@ -265,7 +261,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,1,0,5,0,1">
+         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0,1,0,0,5,0,1">
           <item>
            <widget class="QLabel" name="label_3">
             <property name="text">
@@ -275,6 +271,9 @@
              <set>Qt::AlignCenter</set>
             </property>
            </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="regCombo"/>
           </item>
           <item>
            <widget class="QListView" name="regView"/>
@@ -291,6 +290,9 @@
              <set>Qt::AlignCenter</set>
             </property>
            </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="stackComboBox"/>
           </item>
           <item>
            <widget class="QListView" name="stackView"/>

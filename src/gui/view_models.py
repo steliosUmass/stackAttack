@@ -10,16 +10,20 @@ sys.path.insert( 0, os.path.join( os.path.dirname( os.path.dirname(  os.path.rea
 import registers
 
 class RamModel( QtCore.QAbstractTableModel ):
-    def __init__(self, data):
+    def __init__(self, data, base_addr, val_format='hex' ):
         super(RamModel, self).__init__()
         self._data = data
+        self.val_format = val_format
+        self.base_addr = base_addr
     
     def data(self, index, role):
         if role == Qt.DisplayRole:
-            # See below for the nested-list data structure.
-            # .row() indexes into the outer list,
-            # .column() indexes into the sub-list
-            return self._data[index.row()][index.column()].hex()
+            if self.val_format == 'hex':
+                return self._data[index.row()][index.column()].hex()
+            elif self.val_format == 'binary':
+                return str( int.from_bytes( self._data[index.row()][index.column()], 'big' ) ).zfill( 32 )
+            elif self.val_format == 'decimal':
+                return str( int.from_bytes( self._data[index.row()][index.column()], 'big' ) )
         elif role == Qt.BackgroundRole:
             if index.row() * 4 + index.column() == registers.PC:
                 return QtGui.QColor.fromRgb( 255, 255, 224, alpha=.8 )
@@ -39,20 +43,27 @@ class RamModel( QtCore.QAbstractTableModel ):
             if orientation == Qt.Horizontal:
                 return 'Word ' + str(section)
             if orientation == Qt.Vertical:
-                return 'Line ' + str(section)
+                return 'Line ' + str( self.base_addr // 4 + section)
 
 class CacheModel( QtCore.QAbstractTableModel ):
-    def __init__(self, tag, data, valid ):
+    def __init__(self, tag, data, valid, val_format='hex'):
         super(CacheModel, self).__init__()
         self._data = []
         for i, val in enumerate( data ):
             self._data.append( [ tag[ i ] ] + val + [ valid[ i ] ] )
-    
+        self.val_format = val_format
+   
     def data(self, index, role):
         if role == Qt.DisplayRole:
             val = self._data[index.row()][index.column()]
             if isinstance( val, bytes ):
-                return val.hex()
+                if self.val_format == 'hex':
+                    return self._data[index.row()][index.column()].hex()
+                elif self.val_format == 'binary':
+                    size = len( self._data[index.row()][index.column()] )
+                    return str( int.from_bytes( self._data[index.row()][index.column()], 'big' ) ).zfill( size * 8 )
+                elif self.val_format == 'decimal':
+                    return str( int.from_bytes( self._data[index.row()][index.column()], 'big' ) )
             elif isinstance( val, bool ):
                 return '1' if val else '0'
     
@@ -76,12 +87,22 @@ class CacheModel( QtCore.QAbstractTableModel ):
                 return 'Line ' + str(section)
 
 class RegisterModel( QtCore.QAbstractListModel ):
-    def __init__(self, pc, instr_offset, link, push, pop, cycle ):
+    def __init__(self, pc, instr_offset, link, push, pop, val_format='hex' ):
         super(RegisterModel, self).__init__()
-        self._data = [ 'PC: %d' % pc, ' INSTR_OFFSET: %d' % instr_offset, 
-                'LINK: %d' % link, 'PUSH: {}'.format( push.to_bytes( 16, 'big' ).hex() ), 
-                'POP: {}'.format( pop.to_bytes( 16, 'big' ).hex() ), '-'*20, 'Cycle: %d' % cycle ]
-    
+        self._data = []
+        if val_format == 'hex':
+            self._data = [ 'PC: %s' % pc.to_bytes( 2,'big' ).hex(), ' INSTR_OFFSET: %s' % instr_offset.to_bytes(1, 'big' ). hex(), 
+                    'LINK: %s' % link.to_bytes(2, 'big' ).hex(), 'PUSH: {}'.format( push.to_bytes( 16, 'big' ).hex() ), 
+                    'POP: {}'.format( pop.to_bytes( 16, 'big' ).hex()) ]
+        elif val_format == 'decimal':
+            self._data = [ 'PC: %d' % pc, ' INSTR_OFFSET: %d' % instr_offset, 
+                    'LINK: %d' % link, 'PUSH: {}'.format( push ), 
+                    'POP: {}'.format( pop )  ]
+        elif val_format == 'binary':
+            self._data = [ 'PC: %s' % str( pc ).zfill( 16 ), ' INSTR_OFFSET: %s' % str( instr_offset ).zfill( 2 ), 
+                    'LINK: %s' % str( link ).zfill( 16 ), 'PUSH: {}'.format( str( push ).zfill( 128 ) ), 
+                    'POP: {}'.format( str( pop ).zfill( 128 ) ) ]
+
     def data(self, index, role):
         if role == Qt.DisplayRole:
             return self._data[index.row()]
@@ -104,22 +125,28 @@ class InstrModel( QtCore.QAbstractListModel ):
         return len(self._data)
     
 class StackModel( QtCore.QAbstractListModel  ):
-    def __init__(self, data ):
+    def __init__(self, data, val_format='hex' ):
         super(StackModel, self).__init__()
         self._data = data
+        self.val_format = val_format
     
     def data(self, index, role):
         if role == Qt.DisplayRole:
-            return str( self._data[index.row()] )
+            if self.val_format == 'hex':
+                 return self._data[index.row()].to_bytes( 16, 'big').hex()
+            elif self.val_format == 'binary':
+                return str( int.from_bytes( self._data[index.row()], 'big' ) ).zfill( 128 )
+            elif self.val_format == 'decimal':
+                return str( int.from_bytes( self._data[index.row()], 'big' ) )
     
     def rowCount(self, index):
         # The length of the outer list.
         return len(self._data)
 
 class PipeLineModel( QtCore.QAbstractListModel  ):
-    def __init__(self, data, header ):
+    def __init__(self, data ):
         super(PipeLineModel, self).__init__()
-        self._data = [ header ] + data
+        self._data = data
     
     def data(self, index, role):
         if role == Qt.DisplayRole:
