@@ -81,16 +81,24 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
 
         # set signal for breakpoint set
         self.breakSet.clicked.connect( self.set_break_point )
-      
+        self.listBreakPoints.itemDoubleClicked.connect( self.delete_break_point )
+    
+    def delete_break_point( self, item ):
+        _, pc, _, offset = item.text().split()
+        self.breakpoints.remove( [ int( pc ), int( offset ) ] )
+        self.listBreakPoints.takeItem( self.listBreakPoints.row( item ) )
+        
     def set_break_point( self ):
         line_break = self.lineEditBreakPoint.text().split(',')
         if len( line_break ) != 2:
             print('ERROR setting break point')
         else:
-            self.breakpoints.append( [ int( x ) for x in line_break ] )
-
-            # add item to breakpoint list
-            self.listBreakPoints.addItem( 'PC: {} OFFSET: {}'.format( line_break[ 0 ], line_break[ 1 ] ) )
+            # append if breakpoint doesn't exist
+            pc, offset =  [ int( x ) for x in line_break ]
+            if [ pc, offset ] not in self.breakpoints:
+                self.breakpoints.append( [ pc, offset ] )
+                # add item to breakpoint list
+                self.listBreakPoints.addItem( 'PC: {} OFFSET: {}'.format( line_break[ 0 ], line_break[ 1 ] ) )
 
     def change_addr_view( self ):
         self.current_mem_addr = int( self.lineEditAddr.text().strip() )
