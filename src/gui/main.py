@@ -22,8 +22,10 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
     def __init__(self, parent=None):
         super(Simulator, self).__init__(parent)
         self.setupUi(self)
-        
-        
+       
+        # array of break points for program
+        self.breakpoints = []  
+
         # current address that mem should be pointing to
         self.current_mem_addr = 0
         
@@ -64,7 +66,7 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         self.LoadButton.clicked.connect( self.load_program )           
 
         # create pipeline object to controll simulation
-        self.pipeline = PipeLine( )
+        self.pipeline = PipeLine( self.breakpoints )
 
         # add signal for running sim
         self.runButton.clicked.connect( self.run )
@@ -77,7 +79,19 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         self.decodeView.setModel( view_models.PipeLineModel( self.pipeline.decode.get_state() ) )
         self.executeView.setModel( view_models.PipeLineModel( self.pipeline.execute.get_state() ) )
 
-       
+        # set signal for breakpoint set
+        self.breakSet.clicked.connect( self.set_break_point )
+      
+    def set_break_point( self ):
+        line_break = self.lineEditBreakPoint.text().split(',')
+        if len( line_break ) != 2:
+            print('ERROR setting break point')
+        else:
+            self.breakpoints.append( [ int( x ) for x in line_break ] )
+
+            # add item to breakpoint list
+            self.listBreakPoints.addItem( 'PC: {} OFFSET: {}'.format( line_break[ 0 ], line_break[ 1 ] ) )
+
     def change_addr_view( self ):
         self.current_mem_addr = int( self.lineEditAddr.text().strip() )
         self.index_changed_memCombo( self.memCombo.currentIndex() )
