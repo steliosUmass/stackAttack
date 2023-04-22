@@ -110,9 +110,9 @@ class RegisterModel( QtCore.QAbstractListModel ):
         # The length of the outer list.
         return len(self._data)
     
-class InstrModel( QtCore.QAbstractListModel ):
+class BasicModel( QtCore.QAbstractListModel ):
     def __init__(self, data ):
-        super(InstrModel, self).__init__()
+        super(BasicModel, self).__init__()
         self._data = data
     
     def data(self, index, role):

@@ -325,7 +325,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QListView" name="InstrView"/>
+           <widget class="QListWidget" name="InstrView"/>
           </item>
          </layout>
         </item>

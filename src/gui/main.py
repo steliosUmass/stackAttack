@@ -90,7 +90,7 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         # set running time info
         hit_percent = 'Cache Hit 0%' 
         running_info = [ f"Cycles: { self.pipeline.cycle }", hit_percent ]
-        self.infoListView.setModel( view_models.InstrModel( running_info ) ) 
+        self.infoListView.setModel( view_models.BasicModel( running_info ) ) 
 
     def clear_cache( self ):
         registers.MEMORY.clear_cache()
@@ -119,13 +119,18 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         self.index_changed_memCombo( self.memCombo.currentIndex() )
         
         
-        # print out 12 instr starting at index we are looking at
+        self.InstrView.clear()
         addr = self.current_mem_addr // 4
         end_addr = addr + 1  if addr + 1 < len( registers.MEMORY.next_layer.mem ) else len( registers.MEMORY.next_layer.mem ) 
         defs, instrs = dissassemble( b''.join( 
-            [ l for sublist in registers.MEMORY.next_layer.mem[ addr: end_addr ] for l in sublist ] ), self.symbol_table, self.current_mem_addr // 4 * 16 )
+            [ l for sublist in registers.MEMORY.next_layer.mem[ addr: end_addr ] for l in sublist ] ), self.symbol_table, addr * 16  )
         spacing =  ['',''] if len( defs ) > 0 else []      
-        self.InstrView.setModel( view_models.InstrModel( defs + spacing + instrs ) )
+        self.instr_index_offset = len( spacing ) + len( defs )
+        self.InstrView.addItems( defs + spacing + instrs )
+        
+        # select instr if shown
+        if self.current_mem_addr // 4 * 4 <= registers.PC * 4 + registers.INSTR_OFFSET <= self.current_mem_addr // 4 * 4 + 16:
+            self.InstrView.setCurrentRow( self.instr_index_offset +  registers.PC * 4 + registers.INSTR_OFFSET )
 
     def update_stack( self ):
         # update stack
@@ -153,7 +158,11 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         hit_percent = ( 'Cache Hit 0%' if registers.MEMORY.num_reads == 0 
             else f"Cache Hit { registers.MEMORY.num_hits / registers.MEMORY.num_reads * 100:.2f}%" )
         running_info = [ f"Cycles: { self.pipeline.cycle }", hit_percent ]
-        self.infoListView.setModel( view_models.InstrModel( running_info ) ) 
+        self.infoListView.setModel( view_models.BasicModel( running_info ) ) 
+
+        # select instr if shown
+        if self.current_mem_addr // 4 * 4 <= registers.PC * 4 + registers.INSTR_OFFSET <= self.current_mem_addr // 4 * 4 + 16:
+            self.InstrView.setCurrentRow( self.instr_index_offset +  registers.PC * 4 + registers.INSTR_OFFSET )
 
     def step( self ):
         '''step through one cycle'''
@@ -240,7 +249,11 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         defs, instrs = dissassemble( b''.join( 
             [ l for sublist in registers.MEMORY.next_layer.mem[ addr: end_addr ] for l in sublist ] ), self.symbol_table, addr * 16  )
         spacing =  ['',''] if len( defs ) > 0 else []      
-        self.InstrView.setModel( view_models.InstrModel( defs + spacing + instrs ) )
+        self.instr_index_offset = len( spacing ) + len( defs )
+        self.InstrView.addItems( defs + spacing + instrs )
+
+        # select first row
+        self.InstrView.setCurrentRow( self.instr_index_offset )
 
 def main():
     app = QApplication(sys.argv)
