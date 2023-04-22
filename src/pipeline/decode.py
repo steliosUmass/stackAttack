@@ -90,7 +90,9 @@ class Decode:
 
         if self.curr_instr[ 'is_alu' ]:
             state.append( 'instr: OP: {} {} {} {}'.format( self.curr_instr[ 'Op' ].name, 
-                str( self.curr_instr[ 'Operand_1' ] ), str( self.curr_instr[ 'Operand_2' ] ), str( self.curr_instr[ 'Operand_3' ] ) ) )
+                str( self.curr_instr[ 'Operand_1' ] ) if self.curr_instr[ 'Operand_1' ] != None else '',
+                str( self.curr_instr[ 'Operand_2' ] ) if self.curr_instr[ 'Operand_2' ] != None else '',
+                str( self.curr_instr[ 'Operand_3' ] ) if self.curr_instr[ 'Operand_3' ] != None else '' ) )
         elif self.curr_instr[ 'is_mem_access' ]:
             state.append( 'instr: OP: {} Addr: {}'.format( self.curr_instr[ 'Op' ].name, 
                 str( self.curr_instr[ 'Address' ] ) ) )

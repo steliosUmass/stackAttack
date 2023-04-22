@@ -92,7 +92,9 @@ class ExecuteStage():
         
         if self.last_executed[ 'is_alu' ]:
             state.append( 'instr: OP: {} {} {} {}'.format( self.last_executed[ 'Op' ].name, 
-                str( self.last_executed[ 'Operand_1' ] ), str( self.last_executed[ 'Operand_2' ] ), str( self.last_executed[ 'Operand_3' ] ) ) )
+                    str( self.last_executed[ 'Operand_1' ] ) if self.last_executed[ 'Operand_1' ] != None  else '',
+                    str( self.last_executed[ 'Operand_2' ] ) if self.last_executed[ 'Operand_2' ] != None else '',
+                    str( self.last_executed[ 'Operand_3' ] ) if self.last_executed[ 'Operand_3' ] != None else '' ) )
         elif self.last_executed[ 'is_mem_access' ]:
             state.append( 'instr: OP: {} Addr: {}'.format( self.last_executed[ 'Op' ].name, 
                 str( self.last_executed[ 'Address' ] ) ) )
