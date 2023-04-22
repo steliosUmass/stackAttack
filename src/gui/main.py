@@ -129,8 +129,8 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         self.InstrView.addItems( defs + spacing + instrs )
         
         # select instr if shown
-        if self.current_mem_addr // 4 * 4 <= registers.PC * 4 + registers.INSTR_OFFSET <= self.current_mem_addr // 4 * 4 + 16:
-            self.InstrView.setCurrentRow( self.instr_index_offset +  registers.PC * 4 + registers.INSTR_OFFSET )
+        if ( self.current_mem_addr // 4 )  * 16 <= registers.PC * 4 + registers.INSTR_OFFSET < ( self.current_mem_addr // 4 + 1 ) * 16:
+            self.InstrView.setCurrentRow( self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 ) )
 
     def update_stack( self ):
         # update stack
@@ -161,8 +161,10 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         self.infoListView.setModel( view_models.BasicModel( running_info ) ) 
 
         # select instr if shown
-        if self.current_mem_addr // 4 * 4 <= registers.PC * 4 + registers.INSTR_OFFSET <= self.current_mem_addr // 4 * 4 + 16:
-            self.InstrView.setCurrentRow( self.instr_index_offset +  registers.PC * 4 + registers.INSTR_OFFSET )
+        if ( self.current_mem_addr // 4 )  * 16 <= registers.PC * 4 + registers.INSTR_OFFSET < ( self.current_mem_addr // 4 + 1 ) * 16:
+            self.InstrView.setCurrentRow( self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 ) )
+        else:
+            self.InstrView.clearSelection()
 
     def step( self ):
         '''step through one cycle'''
