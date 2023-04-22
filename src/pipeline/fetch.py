@@ -41,6 +41,10 @@ class Fetch:
                 self.address = registers.PC
                 self.offset = registers.INSTR_OFFSET
                 self.reading = True
+                # if gotten a signal while reading to squash 
+                # while reading, invalidate buffer
+                if self.should_squash:
+                    self.instr_buff_valid = False
                 self.should_squash = False
 
             load_data = self.load( self.address )

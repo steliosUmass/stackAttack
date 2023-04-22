@@ -23,8 +23,9 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         super(Simulator, self).__init__(parent)
         self.setupUi(self)
        
-        # array of break points for program
+        # array of break points for program and symbol table
         self.breakpoints = []  
+        self.symbol_table = {}
 
         # current address that mem should be pointing to
         self.current_mem_addr = 0
@@ -82,7 +83,20 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         # set signal for breakpoint set
         self.breakSet.clicked.connect( self.set_break_point )
         self.listBreakPoints.itemDoubleClicked.connect( self.delete_break_point )
-    
+        
+        # set button to clear cache
+        self.clearCacheButton.clicked.connect( self.clear_cache )
+
+        # set running time info
+        hit_percent = 'Cache Hit 0%' 
+        running_info = [ f"Cycles: { self.pipeline.cycle }", hit_percent ]
+        self.infoListView.setModel( view_models.InstrModel( running_info ) ) 
+
+    def clear_cache( self ):
+        registers.MEMORY.clear_cache()
+        # update memory
+        self.index_changed_memCombo( self.memCombo.currentIndex() )
+
     def delete_break_point( self, item ):
         _, pc, _, offset = item.text().split()
         self.breakpoints.remove( [ int( pc ), int( offset ) ] )
@@ -103,6 +117,15 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
     def change_addr_view( self ):
         self.current_mem_addr = int( self.lineEditAddr.text().strip() )
         self.index_changed_memCombo( self.memCombo.currentIndex() )
+        
+        
+        # print out 12 instr starting at index we are looking at
+        addr = self.current_mem_addr // 4
+        end_addr = addr + 1  if addr + 1 < len( registers.MEMORY.next_layer.mem ) else len( registers.MEMORY.next_layer.mem ) 
+        defs, instrs = dissassemble( b''.join( 
+            [ l for sublist in registers.MEMORY.next_layer.mem[ addr: end_addr ] for l in sublist ] ), self.symbol_table, self.current_mem_addr // 4 * 16 )
+        spacing =  ['',''] if len( defs ) > 0 else []      
+        self.InstrView.setModel( view_models.InstrModel( defs + spacing + instrs ) )
 
     def update_stack( self ):
         # update stack
@@ -119,13 +142,18 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
 
         # update registers 
         self.regView.setModel( view_models.RegisterModel( 
-            registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP, self.memRepCombo.currentText() ) )
+            registers.PC, registers.INSTR_OFFSET, registers.LINK, registers.PUSH, registers.POP, self.regCombo.currentText() ) )
 
         # update pipeline status
         self.fetchView.setModel( view_models.PipeLineModel( self.pipeline.fetch.get_state() ) )
         self.decodeView.setModel( view_models.PipeLineModel( self.pipeline.decode.get_state() ) )
         self.executeView.setModel( view_models.PipeLineModel( self.pipeline.execute.get_state() ) )
-
+        
+        # set running time info
+        hit_percent = ( 'Cache Hit 0%' if registers.MEMORY.num_reads == 0 
+            else f"Cache Hit { registers.MEMORY.num_hits / registers.MEMORY.num_reads * 100:.2f}%" )
+        running_info = [ f"Cycles: { self.pipeline.cycle }", hit_percent ]
+        self.infoListView.setModel( view_models.InstrModel( running_info ) ) 
 
     def step( self ):
         '''step through one cycle'''
@@ -178,7 +206,6 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         prog = None
         with open( file_name, 'rb' ) as f:
             prog = pickle.load( f )
-       
         
         # for each item in dict
         # go through
@@ -206,7 +233,14 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
 
         # refresh gui with program 
         self.index_changed_memCombo( self.memCombo.currentIndex() )
-        #self.InstrView.setModel( view_models.InstrModel( dissassemble( file_name ) ) )
+
+        # print out line of instruction
+        addr = self.current_mem_addr // 4
+        end_addr = addr + 1  if addr + 1 < len( registers.MEMORY.next_layer.mem ) else len( registers.MEMORY.next_layer.mem ) 
+        defs, instrs = dissassemble( b''.join( 
+            [ l for sublist in registers.MEMORY.next_layer.mem[ addr: end_addr ] for l in sublist ] ), self.symbol_table, addr * 16  )
+        spacing =  ['',''] if len( defs ) > 0 else []      
+        self.InstrView.setModel( view_models.InstrModel( defs + spacing + instrs ) )
 
 def main():
     app = QApplication(sys.argv)

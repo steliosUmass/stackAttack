@@ -47,6 +47,7 @@ class Memory():
         self.state = MemoryState.IDLE
         self.next_layer = next_layer
         self.line_length = line_length
+        self.word_length = word_length
 
         # init memory to all 0
         for _ in range(num_lines):
@@ -64,6 +65,10 @@ class Memory():
 
             # if we are cache, get total memory space from next layer
             self.total_mem_space = next_layer.total_mem_space
+
+            # create values too keep track of reads, cache hits
+            self.num_reads = 0
+            self.num_hits = 0
 
         # for ram, use its current size
         else:
@@ -137,10 +142,12 @@ class Memory():
                 # check to see if we have it
                 if self.next_layer is not None:
                     tag, index = self._calc_index_and_tag(address)
-
+                   
+                    self.num_reads += 1
                     # check if hit
                     if self.valid[ index ] and int.from_bytes( self.tag[index], 'big') == tag: 
                         # hit
+                        self.num_hits += 1
                         self.state = MemoryState.IDLE
                         return copy.deepcopy(self.mem[index])
 
@@ -232,6 +239,16 @@ class Memory():
         if self.next_layer is not None:
             self.next_layer.set_cache(cache_on)
 
+    def clear_cache( self ):
+        self.valid = [False] * len( self.mem )
+        self.tag = [ int( 0 ).to_bytes( ceil( ( 16 - 
+            ( ( len( self.mem ) - 1).bit_length() +  ( self.line_length - 1 ).bit_length() ) ) / 8 ), 'big' ) ] *  len( self.mem )
+
+        for i in range( len( self.mem ) ):
+            line = []
+            for _ in range( self.line_length ):
+                line.append(b'\x00' * self.word_length)
+            self.mem[ i ] = line
 
 if __name__ == '__main__':
 

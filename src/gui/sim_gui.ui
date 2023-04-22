@@ -172,7 +172,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_2">
+               <widget class="QPushButton" name="clearCacheButton">
                 <property name="text">
                  <string>Clear Cache</string>
                 </property>
@@ -308,7 +308,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QListView" name="listView"/>
+           <widget class="QListView" name="infoListView"/>
           </item>
          </layout>
         </item>
