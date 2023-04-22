@@ -21,7 +21,7 @@ class RamModel( QtCore.QAbstractTableModel ):
             if self.val_format == 'hex':
                 return self._data[index.row()][index.column()].hex()
             elif self.val_format == 'binary':
-                return str( int.from_bytes( self._data[index.row()][index.column()], 'big' ) ).zfill( 32 )
+                return f"{ int.from_bytes( self._data[index.row()][index.column()], 'big' ) :032b}"
             elif self.val_format == 'decimal':
                 return str( int.from_bytes( self._data[index.row()][index.column()], 'big' ) )
         elif role == Qt.BackgroundRole:
@@ -61,7 +61,7 @@ class CacheModel( QtCore.QAbstractTableModel ):
                     return self._data[index.row()][index.column()].hex()
                 elif self.val_format == 'binary':
                     size = len( self._data[index.row()][index.column()] )
-                    return str( int.from_bytes( self._data[index.row()][index.column()], 'big' ) ).zfill( size * 8 )
+                    return f"{ int.from_bytes( self._data[index.row()][index.column()], 'big' ) :0{size * 8 }b}"
                 elif self.val_format == 'decimal':
                     return str( int.from_bytes( self._data[index.row()][index.column()], 'big' ) )
             elif isinstance( val, bool ):
@@ -99,9 +99,8 @@ class RegisterModel( QtCore.QAbstractListModel ):
                     'LINK: %d' % link, 'PUSH: {}'.format( push ), 
                     'POP: {}'.format( pop )  ]
         elif val_format == 'binary':
-            self._data = [ 'PC: %s' % str( pc ).zfill( 16 ), ' INSTR_OFFSET: %s' % str( instr_offset ).zfill( 2 ), 
-                    'LINK: %s' % str( link ).zfill( 16 ), 'PUSH: {}'.format( str( push ).zfill( 128 ) ), 
-                    'POP: {}'.format( str( pop ).zfill( 128 ) ) ]
+            self._data = [ f"PC: {pc:016b}", f"INSTR_OFFSET: {instr_offset:02b}", 
+                    f"LINK: {link:016b}", f"PUSH: {push:0128b}", f"POP: {pop:0128b}" ]
 
     def data(self, index, role):
         if role == Qt.DisplayRole:
@@ -135,9 +134,9 @@ class StackModel( QtCore.QAbstractListModel  ):
             if self.val_format == 'hex':
                  return self._data[index.row()].to_bytes( 16, 'big').hex()
             elif self.val_format == 'binary':
-                return str( int.from_bytes( self._data[index.row()], 'big' ) ).zfill( 128 )
+                 return f"{ self._data[index.row()]:0128b}"
             elif self.val_format == 'decimal':
-                return str( int.from_bytes( self._data[index.row()], 'big' ) )
+                return str( self._data[index.row()] )
     
     def rowCount(self, index):
         # The length of the outer list.
