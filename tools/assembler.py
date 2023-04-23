@@ -102,6 +102,7 @@ def main():
                 prog_index += 1
             elif instr == '.LOAD':
                 prog_lines.append( line )
+                prog_index += 4
             else:
                 if instr not in instr_mapping.keys() and '.' != instr[ 0 ]:
                     # label definition found here
