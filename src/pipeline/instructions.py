@@ -59,11 +59,11 @@ def alu_op( op,  operand_1, operand_2, operand_3 ):
     result_val = None
     # modifiy operands to be 32 bit only
     if operand_1:
-        operand_1 = operand_1 & 0xFFFF
+        operand_1 = operand_1 & 0xFFFFFFFF
     if operand_2:
-        operand_2 = operand_2 & 0xFFFF
+        operand_2 = operand_2 & 0xFFFFFFFF
     if operand_3:
-        operand_3 = operand_3 & 0xFFFF
+        operand_3 = operand_3 & 0xFFFFFFFF
 
     if op == Op.PUSH_VAL:
         result_val = operand_1
@@ -90,7 +90,8 @@ def alu_op( op,  operand_1, operand_2, operand_3 ):
     elif op == Op.XOR:
         result_val = operand_1 ^ operand_2
     elif op == Op.NOT:
-        result_val = ~operand_1
+        # invert by xor with 1
+        result_val = operand_1 ^ 0xFFFFFFFF
     elif op == Op.EQ:
         result_val = 1 if operand_1 == operand_2 else 0
     elif op == Op.EQ_0:
