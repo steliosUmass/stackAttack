@@ -86,7 +86,7 @@ def alu_op( op,  operand_1, operand_2, operand_3 ):
     elif op == Op.AND:
         result_val = operand_1 & operand_2
     elif op == Op.OR:
-        result_val = operand_1 | opernad_2
+        result_val = operand_1 | operand_2
     elif op == Op.XOR:
         result_val = operand_1 ^ operand_2
     elif op == Op.NOT:

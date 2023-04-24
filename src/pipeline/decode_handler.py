@@ -1,5 +1,9 @@
 import registers
 
+def POP_1(curr_instr):
+    curr_instr['Operand_1'] = registers.STACK.remove()
+    return curr_instr
+
 def POP_2(curr_instr):
     curr_instr['Operand_1'] = registers.STACK.remove()
     curr_instr['Operand_2'] = registers.STACK.remove()
@@ -37,7 +41,7 @@ function_map = {
     "AND": POP_2,
     "OR": POP_2,
     "XOR": POP_2,
-    "NOT": POP_2,
+    "NOT": POP_1,
     "EQ": POP_2,
     "EQ_0": POP_2,
     "GEQ": POP_2,
