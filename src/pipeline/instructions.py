@@ -153,11 +153,29 @@ def branch_op( op, condition, address, instr_offset ):
            registers.PC = address
            registers.INSTR_OFFSET = instr_offset
            squash = True
-
+    elif op == Op.SR:
+           # save current PC and instr_offset
+           registers.LINK = registers.PC << 2
+           registers.LINK += registers.INSTR_OFFSET
+           registers.PC = address
+           registers.INSTR_OFFSET = instr_offset
+           squash = True
+    elif op == Op.RET:
+        # return to current PC and offset
+        registers.INSTR_OFFSET = registers.LINK & 0x03
+        registers.PC = registers.LINK >> 2
+        squash = True
     return squash
 
 
 class MemoryExecuter():
+    '''
+    Executer class used by execute stage to scehdule read/writes
+
+    second_read:
+        signifies if a second read will be necessary
+        used by LDR_64 and LDR_128 instr
+    '''
     def __init__( self ):
         self.second_read = False
     

@@ -31,6 +31,11 @@ def JMP_NO_CON(curr_instr):
     curr_instr['Instr_offset'] = registers.STACK.remove()
     return curr_instr
 
+def RET(curr_instr):
+    curr_instr['Address'] = None
+    curr_instr['Instr_offset'] = None
+    return curr_instr
+
 
 function_map = {
     "ADD": POP_2,
@@ -59,4 +64,6 @@ function_map = {
     "JMP": JMP_NO_CON,
     "JMP_IF_1": JMP,
     "JMP_IF_0": JMP,
+    "SR": JMP_NO_CON,
+    "RET": RET
 }
