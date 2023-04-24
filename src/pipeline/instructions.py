@@ -8,11 +8,17 @@ class Op( Enum ):
     DUP = 2
     LDR_32 = 3
     STR_32 = 4
+    LDR_64 = 5
+    STR_64 = 6
+    LDR_128 = 7
+    STR_128 = 8
     PUSH = 9
     POP = 10
     JMP = 11
     JMP_IF_1 = 12
     JMP_IF_0 = 13
+    SR = 14
+    RET = 15
     ADD = 16
     EQ = 25
     LT = 30
@@ -111,30 +117,91 @@ def branch_op( op, condition, address, instr_offset ):
     return squash
 
 
-def mem_op( op, address ):
-    '''
-    writes or reads value into memory
+class MemoryExecuter():
+    def __init__( self ):
+        self.second_read = False
     
-    Parameters
-    ----------
-    op:
-        Op of instuction to execute
-    address:
-        memory address to read/write to
+    def mem_op( self, op, address ):
+        '''
+        writes or reads value into memory
+        
+        Parameters
+        ----------
+        op:
+            Op of instuction to execute
+        address:
+            memory address to read/write to
+    
+        Returns
+        --------
+        mem_status:
+            status return by memory
+        '''
+        mem_status = None
+        if op == Op.LDR_32:
+            mem_status = registers.MEMORY.read( address, Users.MEMORY )
+            if mem_status != MemoryState.BUSY:
+                registers.PUSH = int.from_bytes( mem_status[ address % 4 ], "big")
+        elif op == Op.STR_32:
+            mem_status = registers.MEMORY.write( address, int( registers.POP & 2**32 - 1 ).to_bytes( 4, 'big' ), Users.MEMORY ) 
+        elif op == Op.LDR_64:
+            # if the second word we need is in the next line
+            # read next line 
+            mem_status = None
+            if self.second_read:
+                mem_status = registers.MEMORY.read( address + 1, Users.MEMORY )
+            else:
+                mem_status = registers.MEMORY.read( address, Users.MEMORY )
+    
+            if mem_status != MemoryState.BUSY:
+                if self.second_read:
+                    registers.PUSH += int.from_bytes( mem_status[ address % 4 ], "big")
+                    self.second_read = False
+                # are both words in same line?
+                # if so we have both words
+                elif address // 4 == ( address + 1 ) // 4:
+                    registers.PUSH =  ( ( int.from_bytes( mem_status[ address % 4 ], "big") << 32 ) 
+                        + int.from_bytes( mem_status[ ( address + 1 ) % 4 ], "big") )
+                # else, just put what we have 
+                else:
+                    registers.PUSH =  ( int.from_bytes( mem_status[ address % 4 ], "big") << 32 ) 
+                    self.second_read = True
+                    mem_status = MemoryState.BUSY
+        elif op == Op.STR_64:
+            registers.MEMORY.write( address, int( ( registers.POP >> 32 ) & 0xFFFFFFFF ).to_bytes( 4, 'big' ), Users.MEMORY ) 
+            mem_status = registers.MEMORY.write( address + 1, int( registers.POP & 0xFFFFFFFF ).to_bytes( 4, 'big' ), Users.MEMORY ) 
 
-    Returns
-    --------
-    mem_status:
-        status return by memory
-    '''
-    mem_status = None
-    if op == Op.LDR_32:
-        mem_status = registers.MEMORY.read( address, Users.MEMORY )
-        if mem_status != MemoryState.BUSY:
-            registers.PUSH = int.from_bytes( mem_status[ address % 4 ], "big")
-    elif op == Op.STR_32:
-        mem_status = registers.MEMORY.write( address, int( registers.POP & 2**32 - 1 ).to_bytes( 4, 'big' ), Users.MEMORY )
-    return mem_status
+        elif op == Op.LDR_128:
+            # if the second word we need is in the next line
+            # read next line 
+            mem_status = None
+            if self.second_read:
+                mem_status = registers.MEMORY.read( address + 4, Users.MEMORY )
+            else:
+                mem_status = registers.MEMORY.read( address, Users.MEMORY )
+    
+            if mem_status != MemoryState.BUSY:
+                if self.second_read:
+                    num_vals =  ( address + 4  ) % 4
+                    for i in range( num_vals ):
+                        registers.PUSH += int.from_bytes( mem_status[ i ], "big") << ( 32 * ( num_vals - 1 - i ) )
+                    self.second_read = False
+                # else, just put what we have 
+                else: 
+                    registers.PUSH = 0
+                    num_vals =  address % 4
+                    self.second_read = num_vals != 0
+                    for i in range( num_vals, 4 ):
+                        registers.PUSH += int.from_bytes( mem_status[ i ], "big") << ( 96 - ( 32*( i - num_vals )  ) )
+                    
+                    mem_status = MemoryState.BUSY if self.second_read else mem_status
+        elif op == Op.STR_128:
+            registers.MEMORY.write( address, int( ( registers.POP >> 96 ) & 0xFFFFFFFF ).to_bytes( 4, 'big' ), Users.MEMORY ) 
+            registers.MEMORY.write( address + 1, int( ( registers.POP >> 64 ) & 0xFFFFFFFF ).to_bytes( 4, 'big' ), Users.MEMORY ) 
+            registers.MEMORY.write( address + 2, int( ( registers.POP >> 32 ) & 0xFFFFFFFF ).to_bytes( 4, 'big' ), Users.MEMORY ) 
+            mem_status = registers.MEMORY.write( address + 3, int( registers.POP & 0xFFFFFFFF ).to_bytes( 4, 'big' ), Users.MEMORY ) 
+
+        return mem_status
 
 if __name__ == '__main__':
     # test ALU

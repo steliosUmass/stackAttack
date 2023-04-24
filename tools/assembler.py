@@ -18,10 +18,10 @@ def gen_type_0_ops( val, op ):
     if op in [ 'DUP', 'SWAP' ]:
         if val > 31:
             raise ValueError( 'cannot have value greater than 31 for DUP/SWAP' )
-        ops = [ f"{ op } { val }" ]
+        ops = [ f"{op} {val}" ]
     elif op == 'PUSH_VAL':
-        if val > 2**128:
-            raise ValueError( 'cannot push value greater than 2**32 for PUSH_VAL' )
+        if val > 2**32:
+            raise ValueError( 'cannot generate push value greater than 2**32 for PUSH_VAL' )
 
        
         # if val fits in one push_val
@@ -55,7 +55,6 @@ def gen_type_0_ops( val, op ):
                 # decrement mask and shift amount
                 mask = mask >> 5
                 shift_amount -= 5
-
     return ops
 
 def main():
@@ -118,7 +117,7 @@ def main():
                     # check if value is in symbol table
                     if val in symbol_table.keys():
                         val = symbol_table[ val ]
-                    if isinstance( val, tuple ) or re.search('[a-zA-Z]', str( val ) ) is not None:
+                    if isinstance( val, tuple ) or ( not str(val).startswith('0x') and re.search('[a-zA-Z]', str( val ) ) is not None):
                         # this is a push_val branch
                         # assume this will only generate 2 instructions for now
                         prog_lines.append( line.strip( '\n' ) )
@@ -131,7 +130,6 @@ def main():
                     
                     elif re.match( '0x[a-fA-F0-9]+|[0-9]+', str( val ) ) is not None:
                         val = parse_int( val )
-                    
                     ops = gen_type_0_ops( val, instr )
                     prog_index += len( ops )
                     prog_lines.extend( ops )

@@ -26,6 +26,7 @@ class ExecuteStage():
         }
         self.status = StageState.IDLE
         self.squash = False
+        self.memory_executer = instructions.MemoryExecuter()
         self.last_executed = self.curr_instr 
     def execute_back_pass( self ):
         '''
@@ -59,7 +60,7 @@ class ExecuteStage():
 
             # instruction is a memory access
             elif self.curr_instr.get( 'is_mem_access', False ):
-                mem_status = instructions.mem_op(  self.curr_instr[ 'Op' ], self.curr_instr[ 'Address' ] )
+                mem_status = self.memory_executer.mem_op(  self.curr_instr[ 'Op' ], self.curr_instr[ 'Address' ] )
             # else, instruction is ALU operation
             else:
                 instructions.alu_op(
