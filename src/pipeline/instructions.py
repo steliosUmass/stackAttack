@@ -20,8 +20,21 @@ class Op( Enum ):
     SR = 14
     RET = 15
     ADD = 16
+    MUL = 17
+    SUB = 18
+    DIV = 19
+    MOD = 20
+    AND = 21
+    OR = 22
+    XOR = 23
+    NOT = 24
     EQ = 25
+    EQ_0 = 26
+    GEQ = 27
+    LEQ = 28
+    GT = 29
     LT = 30
+    R_SHIFT = 31
     L_SHIFT = 32
     NOOP = 48 
     HALT = 49
@@ -62,8 +75,32 @@ def alu_op( op,  operand_1, operand_2, operand_3 ):
             registers.STACK.stack[ registers.STACK.top_index - operand_1 ] )
     elif op == Op.ADD:
         result_val = operand_1 + operand_2
+    elif op == Op.SUB:
+        result_val = operand_2 - operand_1
+    elif op == Op.MUL:
+        result_val = operand_1 * operand_2
+    elif op == Op.DIV:
+        result_val = operand_1 // operand_2 if operand_2 != 0 else 0
+    elif op == Op.MOD:
+        result_val = operand_1 % operand_2
+    elif op == Op.AND:
+        result_val = operand_1 & operand_2
+    elif op == Op.OR:
+        result_val = operand_1 | opernad_2
+    elif op == Op.XOR:
+        result_val = operand_1 ^ operand_2
+    elif op == Op.NOT:
+        result_val = ~operand_1
     elif op == Op.EQ:
         result_val = 1 if operand_1 == operand_2 else 0
+    elif op == Op.EQ_0:
+        result_val = 0 if operand_1 == operand_2 else 1
+    elif op == Op.GEQ:
+        result_val = 1 if operand_1 >= operand_2 else 0
+    elif op == Op.LEQ:
+        result_val = 1 if operand_1 <= operand_2 else 0
+    elif op == Op.GT:
+        result_val = 1 if operand_1 > operand_2 else 0
     elif op == Op.LT:
         result_val = 1 if operand_1 < operand_2 else 0
     elif op == Op.PUSH:
@@ -72,6 +109,8 @@ def alu_op( op,  operand_1, operand_2, operand_3 ):
         registers.STACK.pop()
     elif op == Op.L_SHIFT:
         result_val = operand_2 << operand_1
+    elif op == Op.R_SHIFT:
+        result_val = operand_2 >> operand_1
     if result_val is not None:
         registers.STACK.push( result_val )
 
