@@ -224,7 +224,6 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
             if addr == 'symbol_table':
                 self.symbol_table = b
             else:
-                print( addr, b )
                 mem_index = 0
                 for i in range( 0, len( b ), 4 ):
                     val = None
@@ -239,7 +238,7 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
                         val = bytes( b[ i: i + 4 ] )
                    
                     # put value in RAM
-                    registers.MEMORY.next_layer.mem[ ( addr + mem_index ) // 4 ][ mem_index % 4 ] = val
+                    registers.MEMORY.next_layer.mem[ ( addr + mem_index ) // 4 ][ ( addr + mem_index ) % 4 ] = val
                     mem_index += 1
 
         # refresh gui with program 

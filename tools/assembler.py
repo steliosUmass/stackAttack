@@ -68,7 +68,6 @@ def main():
 
     prog_lines = []
     prog_index = 0
-    
     # this dict keeps track of in index of lines that refernce 
     # branching labels 
     referenced_labels = {}
@@ -96,12 +95,16 @@ def main():
                 if val in symbol_table.keys():
                     val = symbol_table[ val ]
                 addr = parse_int( val )
-                instr_counter = 0
+                prog_index = 0
                 prog_lines.append( f".ADDR { val }" )
-                prog_index += 1
             elif instr == '.LOAD':
                 prog_lines.append( line )
-                prog_index += 4
+                prog_index += 1
+            # found FUNCTION defintion
+            elif instr == 'FUNC':
+               instr = line_split[1]
+               symbol_table[ instr ] = ( addr + prog_index // 4, prog_index % 4 )
+               prog_index += 1
             else:
                 if instr not in instr_mapping.keys() and '.' != instr[ 0 ]:
                     # label definition found here
@@ -150,7 +153,7 @@ def main():
     for label in label_definitons:
         num_pc_bits[ label ] = 5
         ops_needed_for_push[ label ] = 1
-     
+    
     did_change = True
     while did_change:
         did_change = False

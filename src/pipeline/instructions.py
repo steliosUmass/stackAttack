@@ -149,14 +149,7 @@ def branch_op( op, condition, address, instr_offset ):
            registers.PC = address
            registers.INSTR_OFFSET = instr_offset
            squash = True
-    elif op == Op.JMP:
-           registers.PC = address
-           registers.INSTR_OFFSET = instr_offset
-           squash = True
-    elif op == Op.SR:
-           # save current PC and instr_offset
-           registers.LINK = registers.PC << 2
-           registers.LINK += registers.INSTR_OFFSET
+    elif op in ( Op.JMP, Op.SR ):
            registers.PC = address
            registers.INSTR_OFFSET = instr_offset
            squash = True
