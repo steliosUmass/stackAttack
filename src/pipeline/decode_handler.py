@@ -1,8 +1,10 @@
 import registers
 
+
 def POP_1(curr_instr):
     curr_instr['Operand_1'] = registers.STACK.remove()
     return curr_instr
+
 
 def POP_2(curr_instr):
     curr_instr['Operand_1'] = registers.STACK.remove()
@@ -16,15 +18,18 @@ def POP_3(curr_instr):
     curr_instr['Operand_3'] = registers.STACK.remove()
     return curr_instr
 
+
 def MEM_ACCESS(curr_instr):
     curr_instr['Address'] = registers.STACK.remove()
     return curr_instr
+
 
 def JMP(curr_instr):
     curr_instr['Condition'] = registers.STACK.remove()
     curr_instr['Address'] = registers.STACK.remove()
     curr_instr['Instr_offset'] = registers.STACK.remove()
     return curr_instr
+
 
 def JMP_NO_CON(curr_instr):
     curr_instr['Address'] = registers.STACK.remove()
@@ -75,4 +80,6 @@ function_map = {
     "JMP_IF_0": JMP,
     "SR": SR,
     "RET": RET
+    "DUP_TOP": POP_1,
+    "SWAP_TOP": POP_1,
 }
