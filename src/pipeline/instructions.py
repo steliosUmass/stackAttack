@@ -36,8 +36,10 @@ class Op( Enum ):
     LT = 30
     R_SHIFT = 31
     L_SHIFT = 32
-    NOOP = 48 
+    NOOP = 48
     HALT = 49
+    DUP_TOP = 53
+    SWAP_TOP = 54
 
 
 def alu_op( op,  operand_1, operand_2, operand_3 ):
@@ -56,6 +58,7 @@ def alu_op( op,  operand_1, operand_2, operand_3 ):
         third operand from stack, None if not applicable 
 
     '''
+    print( "alu_op: op: {}, operand_1: {}, operand_2: {}, operand_3: {}".format( op, operand_1, operand_2, operand_3 ) )
     result_val = None
     # modifiy operands to be 32 bit only
     if operand_1:
@@ -112,6 +115,12 @@ def alu_op( op,  operand_1, operand_2, operand_3 ):
         result_val = operand_2 << operand_1
     elif op == Op.R_SHIFT:
         result_val = operand_2 >> operand_1
+    elif op == Op.DUP_TOP:
+        result_val = registers.STACK.stack[ registers.STACK.top_index - operand_1 ]
+    elif op == Op.SWAP_TOP:
+        ( registers.STACK.stack[ registers.STACK.top_index - operand_1 ],
+            registers.STACK.stack[ registers.STACK.top_index  ] ) = ( registers.STACK.stack[ registers.STACK.top_index  ],
+            registers.STACK.stack[ registers.STACK.top_index - operand_1 ] )
     if result_val is not None:
         registers.STACK.push( result_val )
 
