@@ -104,18 +104,18 @@ def main():
             elif instr == 'FUNC':
                instr = line_split[1]
                symbol_table[ instr ] = ( addr + prog_index // 4, prog_index % 4 )
+               label_definitons.append( ( instr, addr ) )
                prog_index += 1
             else:
                 if instr not in instr_mapping.keys() and '.' != instr[ 0 ]:
                     # label definition found here
                     instr = instr.strip( ':' )
                     symbol_table[ instr ] = ( addr + prog_index // 4, prog_index % 4 )
-                    label_definitons.append( instr )
+                    label_definitons.append( ( instr, addr ) )
                     line_split = line_split[ 1: ] 
                     line = ' '.join(  line_split )
                     instr = line_split[ 0 ]
                 if len( line_split ) > 1:
-                    
                     val = line_split[1]
                     # check if value is in symbol table
                     if val in symbol_table.keys():
@@ -127,7 +127,7 @@ def main():
                         if line_split[ 1 ] not in referenced_labels.keys():
                             referenced_labels[ line_split[ 1 ] ] = []
 
-                        referenced_labels[ line_split[ 1 ] ].append( prog_index )
+                        referenced_labels[ line_split[ 1 ] ].append( ( addr, prog_index ) )
                         prog_index += 2
                         continue
                     
@@ -150,7 +150,7 @@ def main():
     num_pc_bits = {}
     ops_needed_for_push = {}
     # now, expand the values being pushed
-    for label in label_definitons:
+    for label,_ in label_definitons:
         num_pc_bits[ label ] = 5
         ops_needed_for_push[ label ] = 1
     
@@ -158,11 +158,10 @@ def main():
     while did_change:
         did_change = False
         
-        for label in label_definitons:
+        for label, addr in label_definitons:
             pc = symbol_table[ label ][ 0 ] 
             # check if bit length cannot fit in currently allocated bit length
             if pc.bit_length() > num_pc_bits[ label ]:
-                
                 did_change = True
                 # increment number of pc bits needed
                 num_pc_bits[ label ] += 5
@@ -171,13 +170,16 @@ def main():
 
 
                 # change symbol table value for each label
-                for label_2 in label_definitons:
+                for label_2, addr_2 in label_definitons:
                     if label_2 == label:
                         continue
                     # check to see how many push_val operations are before label def
                     operations_before = 0
-                    for ref in referenced_labels[ label ]:
-                        print( label_2, ref, symbol_table[ label_2 ][ 0 ] * 4 + symbol_table[ label_2 ][ 1 ] )
+                    for addr_ref, ref in referenced_labels[ label ]:
+                        # if this refernce and the label def aren't in the same address code block
+                        # continue since the added operations won't effect the label def
+                        if addr != addr_ref:
+                            continue
                         if ref < symbol_table[ label_2 ][ 0 ] * 4 + symbol_table[ label_2 ][ 1 ]:
                             operations_before += 1
                             
@@ -185,7 +187,6 @@ def main():
                     addr_label_2 = symbol_table[ label_2 ][ 0 ] * 4 + symbol_table[ label_2 ][ 1 ]
                     symbol_table[ label_2 ] = ( (  addr_label_2 + operations_before * ops_needed_for_push[ label ] ) // 4, 
                             ( addr_label_2 + operations_before * ops_needed_for_push[ label ] ) % 4 )
-
     prog_dict = {}
     instr_bytes = bytearray()
     addr = 0
