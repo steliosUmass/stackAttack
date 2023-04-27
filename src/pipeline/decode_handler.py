@@ -79,7 +79,7 @@ function_map = {
     "JMP_IF_1": JMP,
     "JMP_IF_0": JMP,
     "SR": SR,
-    "RET": RET
+    "RET": RET,
     "DUP_TOP": POP_1,
     "SWAP_TOP": POP_1,
 }
