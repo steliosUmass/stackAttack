@@ -1,6 +1,7 @@
 from execute import ExecuteStage
 from decode import Decode
 from fetch import Fetch
+from stage_state import StageState
 import instructions
 import registers
 
@@ -23,7 +24,8 @@ class PipeLine():
 
         # check to see if breakpoint is hit
         # if it is, set halt and do nothing
-        if [ registers.PC, registers.INSTR_OFFSET ] in self.breakpoints and not self.already_stoped:
+        if ( [ registers.PC, registers.INSTR_OFFSET ] in self.breakpoints 
+                and not self.already_stoped and self.fetch.status == StageState.IDLE ):
             self.halt = True
             self.already_stoped = True
         else:
