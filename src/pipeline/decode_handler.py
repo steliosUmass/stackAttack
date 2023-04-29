@@ -79,7 +79,14 @@ function_map = {
     "JMP_IF_1": JMP,
     "JMP_IF_0": JMP,
     "SR": SR,
-    "RET": RET
+    "RET": RET,
+    "GCD" : POP_2,
+    "LCM" : POP_2,
+    "RABIN" : POP_1,
+    "MOD_ADD" : POP_3,
+    "MOD_MUL" : POP_3,
+    "MOD_INV" : POP_2,
+    "DH" : POP_3,
     "DUP_TOP": POP_1,
     "SWAP_TOP": POP_1,
 }

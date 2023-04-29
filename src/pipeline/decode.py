@@ -4,7 +4,7 @@ from stage_state import StageState
 import registers
 import decode_handler
 
-from decode_types import alu, branch, memory
+from decode_types import alu, branch, memory, group
 from execute import *
 
 
@@ -16,6 +16,7 @@ class Decode:
         self.alu_op = alu.alu
         self.branch_op = branch.branch
         self.mem_op = memory.memory
+        self.group_op = group.group
         self.function_map = decode_handler.function_map
         self.new_instr = {
             'type': 1,
@@ -28,6 +29,7 @@ class Decode:
             'is_alu': False,
             'is_branch': False,
             'is_mem_access': False,
+            'is_group': False,
             'squash': False
         }
         self.curr_instr = self.new_instr.copy()
@@ -61,6 +63,8 @@ class Decode:
                 self.curr_instr['is_branch'] = True
             elif self.curr_instr['Op'].name in self.mem_op.keys():
                 self.curr_instr['is_mem_access'] = True
+            elif self.curr_instr['Op'].name in self.group_op.keys():
+                self.curr_instr['is_group'] = True
 
         # get varibales from stack if not squashed
         if not self.todo_op['squash'] and self.curr_instr['Op'].name in decode_handler.function_map:

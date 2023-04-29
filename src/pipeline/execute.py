@@ -27,7 +27,9 @@ class ExecuteStage():
         }
         self.status = StageState.IDLE
         self.squash = False
+        self.alu_executer = instructions.AluExecuter()
         self.memory_executer = instructions.MemoryExecuter()
+        self.cypto_executer = instructions.CryptoExecuter()
         self.last_executed = self.curr_instr
 
     def execute_back_pass(self):
@@ -35,7 +37,6 @@ class ExecuteStage():
         execute the backwards pass of the pipe
         this is where the operations get executed
         '''
-        mem_status = None
         self.squash = False
         self.last_executed = self.curr_instr
 
@@ -53,7 +54,7 @@ class ExecuteStage():
 
             # instruction is a branch
             if self.curr_instr.get('is_branch', False):
-                self.squash = instructions.branch_op(
+                self.squash = self.alu_executer.branch_op(
                     self.curr_instr['Op'],
                     self.curr_instr['Condition'],
                     self.curr_instr['Address'],
@@ -62,18 +63,24 @@ class ExecuteStage():
 
             # instruction is a memory access
             elif self.curr_instr.get('is_mem_access', False):
-                mem_status = self.memory_executer.mem_op(
+                self.status = self.memory_executer.mem_op(
                     self.curr_instr['Op'], self.curr_instr['Address'])
-            # else, instruction is ALU operation
-            else:
-                instructions.alu_op(
+            elif self.curr_instr.get( 'is_group', False ):
+                self.status = self.cypto_executer.group_op(
                     self.curr_instr['Op'],
                     self.curr_instr['Operand_1'],
                     self.curr_instr['Operand_2'],
                     self.curr_instr['Operand_3']
                 )
 
-        self.status = StageState.IDLE if mem_status != MemoryState.BUSY else StageState.STALL
+            # else, instruction is ALU operation
+            else:
+                self.alu_executer.alu_op(
+                    self.curr_instr['Op'],
+                    self.curr_instr['Operand_1'],
+                    self.curr_instr['Operand_2'],
+                    self.curr_instr['Operand_3']
+                )
 
         # return status from Execute to decode
         return {

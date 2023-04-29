@@ -21,6 +21,8 @@ alu = {
     "LT": 30,
     "L_SHIFT": 32,
     "R_SHIFT": 33,
+    'GCD': 34,
+    'LCM': 35,
     "DUP_TOP": 53,
     "SWAP_TOP": 54,
 }

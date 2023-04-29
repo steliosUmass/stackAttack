@@ -9,6 +9,7 @@ import sim_gui
 import sys
 import os
 import pickle
+import re
 
 # Add pipeline directory to path
 sys.path.insert( 0, os.path.join( os.path.dirname( os.path.dirname(  os.path.realpath( __file__ ) ) ), 'pipeline' ) )
@@ -22,7 +23,8 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
     def __init__(self, parent=None):
         super(Simulator, self).__init__(parent)
         self.setupUi(self)
-       
+        self.instr_offset = 0
+        self.current_high_lighted_instr = False 
         # array of break points for program and symbol table
         self.breakpoints = []  
         self.symbol_table = {}
@@ -128,9 +130,16 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         self.instr_index_offset = len( spacing ) + len( defs )
         self.InstrView.addItems( defs + spacing + instrs )
         
-        # select instr if shown
-        if ( self.current_mem_addr // 4 )  * 16 <= registers.PC * 4 + registers.INSTR_OFFSET < ( self.current_mem_addr // 4 + 1 ) * 16:
-            self.InstrView.setCurrentRow( self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 ) )
+        #self.instr_offset = 0
+        ## select instr if shown
+        #if ( self.current_mem_addr // 4 )  * 16 <= registers.PC * 4 + registers.INSTR_OFFSET < ( self.current_mem_addr // 4 + 1 ) * 16:
+        #    # get offset of current instruction based on PC
+        #    for i in range(  self.instr_index_offset, self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 ) ):
+        #        print( self.InstrView.item( i ).text() )
+        #        if re.match('PUSH_VAL [a-zA-Z]+', self.InstrView.item( i ).text() ) is not None:
+        #            self.instr_offset -= 1
+        #    print( self.instr_offset )
+        #    self.InstrView.setCurrentRow( self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 ) + self.instr_offset )
 
     def update_stack( self ):
         # update stack
@@ -160,11 +169,33 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         running_info = [ f"Cycles: { self.pipeline.cycle }", hit_percent ]
         self.infoListView.setModel( view_models.BasicModel( running_info ) ) 
 
+
+        # logic for highlighting current instr pointed to
+        # will fix if have extra time 
         # select instr if shown
-        if ( self.current_mem_addr // 4 )  * 16 <= registers.PC * 4 + registers.INSTR_OFFSET < ( self.current_mem_addr // 4 + 1 ) * 16:
-            self.InstrView.setCurrentRow( self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 ) )
-        else:
-            self.InstrView.clearSelection()
+        #if ( self.current_mem_addr // 4 )  * 16 <= registers.PC * 4 + registers.INSTR_OFFSET < ( self.current_mem_addr // 4 + 1 ) * 16 + self.instr_offset:
+        #    # calc instruction offset if previous instr wasn't highlighted
+        #    if not self.current_high_lighted_instr:
+        #        for i in range(  self.instr_index_offset, self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 ) ):
+        #            print( self.InstrView.item( i ).text() )
+        #            if re.match('PUSH_VAL [a-zA-Z]+', self.InstrView.item( i ).text() ) is not None:
+        #                self.instr_offset -= 1
+        #    
+        #    self.current_high_lighted_instr = True
+        #    self.InstrView.setCurrentRow( self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 ) + self.instr_offset )
+        #    i = self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 ) + self.instr_offset 
+        #    print( self.InstrView.item( i ).text() )
+        #    print( self.instr_offset )
+        #    
+        #    # see if current instruction is "PUSH_VAL LABEL", if so decrement offset
+        #    if re.match('PUSH_VAL [a-zA-Z]+', self.InstrView.item( 
+        #            self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 ) ).text() ):
+        #        self.instr_offset -= 1
+
+        #else:
+        #    self.InstrView.clearSelection()
+        #    self.current_high_lighted_instr = False
+        #    self.instr_offset = 0
 
     def step( self ):
         '''step through one cycle'''
