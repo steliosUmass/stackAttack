@@ -92,7 +92,7 @@ class Decode:
         state = ['State: {}'.format(self.status.name), 'Will Squash: {}'.format(
             'Yes' if self.curr_instr['squash'] else 'No')]
 
-        if self.curr_instr['is_alu']:
+        if self.curr_instr['is_alu'] or self.curr_instr['is_group'] :
             state.append('instr: OP: {} {} {} {}'.format(self.curr_instr['Op'].name,
                                                          str(
                                                              self.curr_instr['Operand_1']) if self.curr_instr['Operand_1'] != None else '',

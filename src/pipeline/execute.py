@@ -23,7 +23,9 @@ class ExecuteStage():
             'Operand_3': None,
             'is_alu': False,
             'is_mem_access': False,
-            'is_branch': False
+            'is_branch': False,
+            'is_group': False
+
         }
         self.status = StageState.IDLE
         self.squash = False
@@ -102,7 +104,7 @@ class ExecuteStage():
         state = ['Status: {}'.format(self.status.name), 'Will Send Squash: {}'.format(
             'Yes' if self.squash else 'No')]
 
-        if self.last_executed['is_alu']:
+        if self.last_executed['is_alu'] or self.last_executed['is_group'] :
             state.append('instr: OP: {} {} {} {}'.format(self.last_executed['Op'].name,
                                                          str(
                                                              self.last_executed['Operand_1']) if self.last_executed['Operand_1'] != None else '',
