@@ -23,7 +23,7 @@ def dissassemble( instr_bytes, symbol_table, base_addr=0 ):
                 literal = val & 31
 
                 # check if this line had a label or 
-                # literal is a variabl
+                # literal is a variable
                 # Also check if the last two instr where push_val
                 # if thats the case, could replace them with a "PUSH_VAL LABEL"
                 pc = None
@@ -35,14 +35,17 @@ def dissassemble( instr_bytes, symbol_table, base_addr=0 ):
                     if val in symbol_table.keys():
                         offset = symbol_table[ val ]
                     else:
-                        offset = int( instr_list[ -1 ].split()[ -1 ] )
+                        if instr_list[ -1 ].split()[ -1 ].isdigit():
+                            offset = int( instr_list[ -1 ].split()[ -1 ] )
                 
                 variable = None
                 label = ''
                 for var, val in symbol_table.items():
                     if pc != None and ( pc, offset ) == val:
-                       del instr_list[ -1 ]
-                       variable = var
+                       prev_instr = instr_list[ -1 ].split()
+                       prev_instr[ -1 ] = var + ' ( OFFSET )'
+                       instr_list[ -1 ] = ' '.join( prev_instr )
+                       variable = var + ' ( PC )'
                        if f"{var} = PC:{ val[0] } OFFSET:{ val[1] }" not in defs_used:
                           defs_used.append( f"{var} = PC:{ val[0] } OFFSET:{ val[1] }")
                     if variable == None and literal == val:
