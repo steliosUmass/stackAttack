@@ -1,6 +1,7 @@
 # got this from https://www.pythonguis.com/tutorials/qtableview-modelviews-numpy-pandas/
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
+import string
 import sys
 import os
 
@@ -24,6 +25,18 @@ class RamModel( QtCore.QAbstractTableModel ):
                 return f"{ int.from_bytes( self._data[index.row()][index.column()], 'big' ) :032b}"
             elif self.val_format == 'decimal':
                 return str( int.from_bytes( self._data[index.row()][index.column()], 'big' ) )
+            elif self.val_format == 'ascii':
+                # got this from https://stackoverflow.com/questions/42064158/checking-if-a-byte-is-ascii-printable
+                printable_chars = set(bytes(string.printable, 'ascii'))
+                b = bytearray()
+                # check to see if val is within range
+                for byte in self._data[index.row()][index.column()]:
+                    if byte < 128 and byte in printable_chars:
+                        b.append( byte )
+                    else:
+                        # print '.' char
+                        b.append( 46  )
+                return b.decode("ascii")
         elif role == Qt.BackgroundRole:
             if index.row() * 4 + index.column() == registers.PC:
                 return QtGui.QColor.fromRgb( 255, 255, 224, alpha=.8 )
@@ -57,13 +70,29 @@ class CacheModel( QtCore.QAbstractTableModel ):
         if role == Qt.DisplayRole:
             val = self._data[index.row()][index.column()]
             if isinstance( val, bytes ):
-                if self.val_format == 'hex':
+                if index.column() > 0:
+                    if self.val_format == 'hex':
+                        return self._data[index.row()][index.column()].hex()
+                    elif self.val_format == 'binary':
+                        size = len( self._data[index.row()][index.column()] )
+                        return f"{ int.from_bytes( self._data[index.row()][index.column()], 'big' ) :0{size * 8 }b}"
+                    elif self.val_format == 'decimal':
+                        return str( int.from_bytes( self._data[index.row()][index.column()], 'big' ) )
+                    elif self.val_format == 'ascii':
+                        # got this from https://stackoverflow.com/questions/42064158/checking-if-a-byte-is-ascii-printable
+                        printable_chars = set(bytes(string.printable, 'ascii'))
+                        b = bytearray()
+                        # check to see if val is within range
+                        for byte in self._data[index.row()][index.column()]:
+                            if byte < 128 and byte in printable_chars:
+                                b.append( byte )
+                            else:
+                                # print '.' char
+                                b.append( 46  )
+                        return b.decode("ascii")
+                else:
                     return self._data[index.row()][index.column()].hex()
-                elif self.val_format == 'binary':
-                    size = len( self._data[index.row()][index.column()] )
-                    return f"{ int.from_bytes( self._data[index.row()][index.column()], 'big' ) :0{size * 8 }b}"
-                elif self.val_format == 'decimal':
-                    return str( int.from_bytes( self._data[index.row()][index.column()], 'big' ) )
+
             elif isinstance( val, bool ):
                 return '1' if val else '0'
     

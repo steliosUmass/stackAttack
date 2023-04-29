@@ -38,7 +38,7 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         self.memCombo.addItems( [ 'RAM', 'CACHE'] )
 
         # init combo box to different format representations
-        self.memRepCombo.addItems( ['hex', 'binary', 'decimal' ] )
+        self.memRepCombo.addItems( ['hex', 'binary', 'decimal', 'ascii' ] )
         self.regCombo.addItems( ['hex', 'binary', 'decimal' ] )
         self.stackComboBox.addItems( ['hex', 'binary', 'decimal' ] )
 
