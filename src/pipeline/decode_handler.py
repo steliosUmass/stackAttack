@@ -87,6 +87,10 @@ function_map = {
     "MOD_MUL" : POP_3,
     "MOD_INV" : POP_2,
     "DH" : POP_3,
+    "RSA" : POP_3,
+    "AESE" : POP_2,
+    "AESD" : POP_2,
+    "SHA256" : POP_1,
     "DUP_TOP": POP_1,
     "SWAP_TOP": POP_1,
 }

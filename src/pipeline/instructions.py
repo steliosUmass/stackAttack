@@ -1,11 +1,17 @@
 from enum import Enum
+import hashlib
 from memory import Users, MemoryState
 from math import gcd
 from miller_rabin import miller_rabin_deterministic64
+from rsa import rsa_encrypt, rsa_decrypt
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
 from stage_state import StageState
-import registers 
+import registers
 import random
-class Op( Enum ):
+
+
+class Op(Enum):
     PUSH_VAL = 0
     SWAP = 1
     DUP = 2
@@ -39,7 +45,7 @@ class Op( Enum ):
     LT = 30
     R_SHIFT = 31
     L_SHIFT = 32
-    GCD  = 33
+    GCD = 33
     LCM = 34
     RAND = 35
     RABIN = 36
@@ -47,20 +53,27 @@ class Op( Enum ):
     MOD_MUL = 38
     MOD_INV = 39
     DH = 40
+    RSA = 41
+    AESE = 42
+    AESD = 43
+    SCHNORR_SIG = 44
+    SCHNORR_VER = 45
+    SHA256 = 46
     NOOP = 48
     HALT = 49
     DUP_TOP = 53
     SWAP_TOP = 54
 
+
 class AluExecuter():
-    
-    def __init__( self ):
+
+    def __init__(self):
         pass
-    
-    def alu_op( self, op,  operand_1, operand_2, operand_3 ):
+
+    def alu_op(self, op,  operand_1, operand_2, operand_3):
         '''
         Does ALU operations
-        
+
         Parameters
         ----------
         op:
@@ -71,7 +84,7 @@ class AluExecuter():
             second operand from stack, None if not applicable 
         operand_3: 
             third operand from stack, None if not applicable 
-    
+
         '''
         #print( "alu_op: op: {}, operand_1: {}, operand_2: {}, operand_3: {}".format( op, operand_1, operand_2, operand_3 ) )
         result_val = None
@@ -82,15 +95,15 @@ class AluExecuter():
             operand_2 = operand_2 & 0xFFFFFFFF
         if operand_3:
             operand_3 = operand_3 & 0xFFFFFFFF
-        
+
         if op == Op.PUSH_VAL:
             result_val = operand_1
         elif op == Op.DUP:
-            result_val = registers.STACK.stack[ registers.STACK.top_index - operand_1 ]
+            result_val = registers.STACK.stack[registers.STACK.top_index - operand_1]
         elif op == Op.SWAP:
-            ( registers.STACK.stack[ registers.STACK.top_index - operand_1 ],
-                registers.STACK.stack[ registers.STACK.top_index  ] ) = ( registers.STACK.stack[ registers.STACK.top_index  ],
-                registers.STACK.stack[ registers.STACK.top_index - operand_1 ] )
+            (registers.STACK.stack[registers.STACK.top_index - operand_1],
+                registers.STACK.stack[registers.STACK.top_index]) = (registers.STACK.stack[registers.STACK.top_index],
+                                                                     registers.STACK.stack[registers.STACK.top_index - operand_1])
         elif op == Op.ADD:
             result_val = operand_1 + operand_2
         elif op == Op.SUB:
@@ -123,7 +136,7 @@ class AluExecuter():
         elif op == Op.LT:
             result_val = 1 if operand_1 < operand_2 else 0
         elif op == Op.PUSH:
-            registers.STACK.push( registers.PUSH )
+            registers.STACK.push(registers.PUSH)
         elif op == Op.POP:
             registers.STACK.pop()
         elif op == Op.L_SHIFT:
@@ -131,23 +144,24 @@ class AluExecuter():
         elif op == Op.R_SHIFT:
             result_val = operand_2 >> operand_1
         elif op == Op.DUP_TOP:
-            result_val = registers.STACK.stack[ registers.STACK.top_index - operand_1 ]
+            result_val = registers.STACK.stack[registers.STACK.top_index - operand_1]
         elif op == Op.SWAP_TOP:
-            ( registers.STACK.stack[ registers.STACK.top_index - operand_1 ],
-                registers.STACK.stack[ registers.STACK.top_index  ] ) = ( registers.STACK.stack[ registers.STACK.top_index  ],
-                registers.STACK.stack[ registers.STACK.top_index - operand_1 ] )
+            (registers.STACK.stack[registers.STACK.top_index - operand_1],
+                registers.STACK.stack[registers.STACK.top_index]) = (registers.STACK.stack[registers.STACK.top_index],
+                                                                     registers.STACK.stack[registers.STACK.top_index - operand_1])
         elif op == Op.GCD:
-            result_val = gcd( operand_1, operand_2 )
+            result_val = gcd(operand_1, operand_2)
         elif op == Op.LCM:
-            result_val =  ( abs( operand_1 * operand_2 ) // gcd( operand_1, operand_2 ) ) & 0xFFFFFFFF
-                
+            result_val = (abs(operand_1 * operand_2) //
+                          gcd(operand_1, operand_2)) & 0xFFFFFFFF
+
         if result_val is not None:
-            registers.STACK.push( result_val )
-    
-    def branch_op( self, op, condition, address, instr_offset ):
+            registers.STACK.push(result_val)
+
+    def branch_op(self, op, condition, address, instr_offset):
         '''
         Checks branch condition, and updates PC + INSTR_OFFSET
-        
+
         Parameters
         ----------
         op:
@@ -158,7 +172,7 @@ class AluExecuter():
             address of word to jump to
         instr_offset: 
             offset of instruction to start at
-    
+
         Returns
         --------
         squash:
@@ -174,14 +188,14 @@ class AluExecuter():
                 registers.INSTR_OFFSET = instr_offset
                 squash = True
         elif op == Op.JMP_IF_0:
-           if condition is not None and condition == 0:
-               registers.PC = address
-               registers.INSTR_OFFSET = instr_offset
-               squash = True
-        elif op in ( Op.JMP, Op.SR ):
-               registers.PC = address
-               registers.INSTR_OFFSET = instr_offset
-               squash = True
+            if condition is not None and condition == 0:
+                registers.PC = address
+                registers.INSTR_OFFSET = instr_offset
+                squash = True
+        elif op in (Op.JMP, Op.SR):
+            registers.PC = address
+            registers.INSTR_OFFSET = instr_offset
+            squash = True
         elif op == Op.RET:
             # return to current PC and offset
             registers.INSTR_OFFSET = registers.LINK & 0x03
@@ -189,38 +203,41 @@ class AluExecuter():
             squash = True
         return squash
 
+
 class CryptoExecuter():
     '''
     Executer class used by execute stage to scehdule crypto instructions
     '''
-    def __init__( self ):
+
+    def __init__(self):
         self.counter = -1
-    
-    def group_op( self, op, operand_1, operand_2, operand_3 ):
+
+    def group_op(self, op, operand_1, operand_2, operand_3):
         result_val = None
-        
+
         if op == Op.MOD_ADD:
             val_1 = operand_1 & 0xFFFFFFFFFFFFFFFF
             val_2 = operand_2 & 0xFFFFFFFFFFFFFFFF
             n = operand_3 & 0xFFFFFFFFFFFFFFFF
-            result_val = ( val_1 * val_2 ) % n
+            result_val = (val_1 * val_2) % n
         elif op == Op.MOD_MUL:
             val_1 = operand_1 & 0xFFFFFFFFFFFFFFFF
             exponent = operand_2 & 0xFFFFFFFF
             n = operand_3 & 0xFFFFFFFFFFFFFFFF
-            result_val = ( val_1 ** exponent ) % n
+            result_val = (val_1 ** exponent) % n
         elif op == Op.MOD_INV:
             val_1 = operand_1 & 0xFFFFFFFFFFFFFFFF
             exponent = operand_2 & 0xFFFFFFFF
             n = operand_3 & 0xFFFFFFFFFFFFFFFF
-            result_val = ( val_1 ** exponent ) % n
+            result_val = (val_1 ** exponent) % n
         elif op == Op.RAND:
-            result_val = random.randint( 0, 2*64 - 1 )
+            result_val = random.randint(0, 2*64 - 1)
         elif op == Op.RABIN:
             if self.counter < 0:
                 self.counter = 10
             elif self.counter == 0:
-                result_val = 1 if miller_rabin_deterministic64( operand_1 & 0xFFFFFFFFFFFFFFFF ) else 0
+                result_val = 1 if miller_rabin_deterministic64(
+                    operand_1 & 0xFFFFFFFFFFFFFFFF) else 0
             self.counter -= 1
         elif op == Op.DH:
             if self.counter < 0:
@@ -229,38 +246,67 @@ class CryptoExecuter():
                 val_1 = operand_1 & 0xFFFFFFFFFFFFFFFF
                 exponent = operand_2 & 0xFFFFFFFF
                 n = operand_3 & 0xFFFFFFFFFFFFFFFF
-                result_vaL = ( val_1 ** exponent ) % n
+                result_vaL = (val_1 ** exponent) % n
             self.counter -= 1
-    
+        elif op == Op.RSA:
+            if self.counter < 0:
+                self.counter = 5
+            elif self.counter == 0:
+                val_1 = operand_1 & 0xFFFFFFFFFFFFFFFF
+                exponent = operand_2 & 0xFFFFFFFF
+                n = operand_3 & 0xFFFFFFFFFFFFFFFF
+                result_val = (val_1 ** exponent) % n
+            self.counter -= 1
+        elif op == Op.AESE:
+            if self.counter < 0:
+                self.counter = 15
+            elif self.counter == 0:
+                message = operand_1 & 0xFFFFFFFFFFFFFFFF
+                key = operand_2 & 0xFFFFFFFFFFFFFFFF
+                result_val = AES.new(key.to_bytes(16, 'big'), AES.MODE_ECB).encrypt(
+                    message.to_bytes(16, 'big'))
+            self.counter -= 1
+        elif op == Op.AESD:
+            if self.counter < 0:
+                self.counter = 15
+            elif self.counter == 0:
+                message = operand_1 & 0xFFFFFFFFFFFFFFFF
+                key = operand_2 & 0xFFFFFFFFFFFFFFFF
+                result_val = AES.new(key.to_bytes(16, 'big'), AES.MODE_ECB).decrypt(
+                    message.to_bytes(16, 'big'))
+            self.counter -= 1
+        elif op == Op.SHA256:
+            if self.counter < 0:
+                self.counter = 5
+            elif self.counter == 0:
+                message = operand_1 & 0xFFFFFFFFFFFFFFFF
+                result_val = hashlib.sha256(message.to_bytes(16, 'big')).digest()
+            self.counter -= 1
         if result_val is not None:
-            registers.STACK.push( result_val )
+            registers.STACK.push(result_val)
 
         return StageState.IDLE if self.counter < 0 else StageState.STALL
-         
 
-
-
-
-        
 
 class MemoryExecuter():
     '''
     Executer class used by execute stage to scehdule read/writes
     '''
-    def __init__( self ):
+
+    def __init__(self):
         self.second_read = False
-    
-    def mem_op( self, op, address ):
+
+    def mem_op(self, op, address):
         '''
         writes or reads value into memory
-        
+
         Parameters
         ----------
         op:
             Op of instuction to execute
         address:
             memory address to read/write to
-    
+
         Returns
         --------
         mem_status:
@@ -268,69 +314,81 @@ class MemoryExecuter():
         '''
         mem_status = None
         if op == Op.LDR_32:
-            mem_status = registers.MEMORY.read( address, Users.MEMORY )
+            mem_status = registers.MEMORY.read(address, Users.MEMORY)
             if mem_status != MemoryState.BUSY:
-                registers.PUSH = int.from_bytes( mem_status[ address % 4 ], "big")
+                registers.PUSH = int.from_bytes(mem_status[address % 4], "big")
         elif op == Op.STR_32:
-            mem_status = registers.MEMORY.write( address, int( registers.POP & 2**32 - 1 ).to_bytes( 4, 'big' ), Users.MEMORY ) 
+            mem_status = registers.MEMORY.write(address, int(
+                registers.POP & 2**32 - 1).to_bytes(4, 'big'), Users.MEMORY)
         elif op == Op.LDR_64:
             # if the second word we need is in the next line
-            # read next line 
+            # read next line
             mem_status = None
             if self.second_read:
-                mem_status = registers.MEMORY.read( address + 1, Users.MEMORY )
+                mem_status = registers.MEMORY.read(address + 1, Users.MEMORY)
             else:
-                mem_status = registers.MEMORY.read( address, Users.MEMORY )
-    
+                mem_status = registers.MEMORY.read(address, Users.MEMORY)
+
             if mem_status != MemoryState.BUSY:
                 if self.second_read:
-                    registers.PUSH += int.from_bytes( mem_status[ address % 4 ], "big")
+                    registers.PUSH += int.from_bytes(
+                        mem_status[address % 4], "big")
                     self.second_read = False
                 # are both words in same line?
                 # if so we have both words
-                elif address // 4 == ( address + 1 ) // 4:
-                    registers.PUSH =  ( ( int.from_bytes( mem_status[ address % 4 ], "big") << 32 ) 
-                        + int.from_bytes( mem_status[ ( address + 1 ) % 4 ], "big") )
-                # else, just put what we have 
+                elif address // 4 == (address + 1) // 4:
+                    registers.PUSH = ((int.from_bytes(mem_status[address % 4], "big") << 32)
+                                      + int.from_bytes(mem_status[(address + 1) % 4], "big"))
+                # else, just put what we have
                 else:
-                    registers.PUSH =  ( int.from_bytes( mem_status[ address % 4 ], "big") << 32 ) 
+                    registers.PUSH = (int.from_bytes(
+                        mem_status[address % 4], "big") << 32)
                     self.second_read = True
                     mem_status = MemoryState.BUSY
         elif op == Op.STR_64:
-            registers.MEMORY.write( address, int( ( registers.POP >> 32 ) & 0xFFFFFFFF ).to_bytes( 4, 'big' ), Users.MEMORY ) 
-            mem_status = registers.MEMORY.write( address + 1, int( registers.POP & 0xFFFFFFFF ).to_bytes( 4, 'big' ), Users.MEMORY ) 
+            registers.MEMORY.write(address, int(
+                (registers.POP >> 32) & 0xFFFFFFFF).to_bytes(4, 'big'), Users.MEMORY)
+            mem_status = registers.MEMORY.write(
+                address + 1, int(registers.POP & 0xFFFFFFFF).to_bytes(4, 'big'), Users.MEMORY)
 
         elif op == Op.LDR_128:
             # if the second word we need is in the next line
-            # read next line 
+            # read next line
             mem_status = None
             if self.second_read:
-                mem_status = registers.MEMORY.read( address + 4, Users.MEMORY )
+                mem_status = registers.MEMORY.read(address + 4, Users.MEMORY)
             else:
-                mem_status = registers.MEMORY.read( address, Users.MEMORY )
-    
+                mem_status = registers.MEMORY.read(address, Users.MEMORY)
+
             if mem_status != MemoryState.BUSY:
                 if self.second_read:
-                    num_vals =  ( address + 4  ) % 4
-                    for i in range( num_vals ):
-                        registers.PUSH += int.from_bytes( mem_status[ i ], "big") << ( 32 * ( num_vals - 1 - i ) )
+                    num_vals = (address + 4) % 4
+                    for i in range(num_vals):
+                        registers.PUSH += int.from_bytes(
+                            mem_status[i], "big") << (32 * (num_vals - 1 - i))
                     self.second_read = False
-                # else, just put what we have 
-                else: 
+                # else, just put what we have
+                else:
                     registers.PUSH = 0
-                    num_vals =  address % 4
+                    num_vals = address % 4
                     self.second_read = num_vals != 0
-                    for i in range( num_vals, 4 ):
-                        registers.PUSH += int.from_bytes( mem_status[ i ], "big") << ( 96 - ( 32*( i - num_vals )  ) )
-                    
+                    for i in range(num_vals, 4):
+                        registers.PUSH += int.from_bytes(
+                            mem_status[i], "big") << (96 - (32*(i - num_vals)))
+
                     mem_status = MemoryState.BUSY if self.second_read else mem_status
         elif op == Op.STR_128:
-            registers.MEMORY.write( address, int( ( registers.POP >> 96 ) & 0xFFFFFFFF ).to_bytes( 4, 'big' ), Users.MEMORY ) 
-            registers.MEMORY.write( address + 1, int( ( registers.POP >> 64 ) & 0xFFFFFFFF ).to_bytes( 4, 'big' ), Users.MEMORY ) 
-            registers.MEMORY.write( address + 2, int( ( registers.POP >> 32 ) & 0xFFFFFFFF ).to_bytes( 4, 'big' ), Users.MEMORY ) 
-            mem_status = registers.MEMORY.write( address + 3, int( registers.POP & 0xFFFFFFFF ).to_bytes( 4, 'big' ), Users.MEMORY ) 
+            registers.MEMORY.write(address, int(
+                (registers.POP >> 96) & 0xFFFFFFFF).to_bytes(4, 'big'), Users.MEMORY)
+            registers.MEMORY.write(
+                address + 1, int((registers.POP >> 64) & 0xFFFFFFFF).to_bytes(4, 'big'), Users.MEMORY)
+            registers.MEMORY.write(
+                address + 2, int((registers.POP >> 32) & 0xFFFFFFFF).to_bytes(4, 'big'), Users.MEMORY)
+            mem_status = registers.MEMORY.write(
+                address + 3, int(registers.POP & 0xFFFFFFFF).to_bytes(4, 'big'), Users.MEMORY)
 
         return StageState.STALL if mem_status == MemoryState.BUSY else StageState.IDLE
+
 
 if __name__ == '__main__':
     # test ALU
@@ -338,58 +396,56 @@ if __name__ == '__main__':
     # test push_val
     op_1 = 3
     op_2 = 5
-    alu_op( Op.PUSH_VAL, op_1, op_2, None )
-    print( 'Push_val:', registers.STACK )
+    alu_op(Op.PUSH_VAL, op_1, op_2, None)
+    print('Push_val:', registers.STACK)
     # test DUP
-    alu_op( Op.DUP, op_1, op_2, None )
-    print( 'DUP:',  registers.STACK )
+    alu_op(Op.DUP, op_1, op_2, None)
+    print('DUP:',  registers.STACK)
     # test add
-    alu_op( Op.ADD, op_1, op_2, None )
-    print( 'ADD:',  registers.STACK )
+    alu_op(Op.ADD, op_1, op_2, None)
+    print('ADD:',  registers.STACK)
     # test EQ
-    alu_op( Op.EQ, op_1, op_2, None )
-    print( 'EQ:',  registers.STACK )
+    alu_op(Op.EQ, op_1, op_2, None)
+    print('EQ:',  registers.STACK)
     # test push
     registers.PUSH = 23
-    alu_op( Op.PUSH, op_1, op_2, None ) 
-    print( 'PUSH:', registers.STACK )
+    alu_op(Op.PUSH, op_1, op_2, None)
+    print('PUSH:', registers.STACK)
     # test pop
-    alu_op( Op.POP, op_1, op_2, None )
-    print( 'POP:', registers.STACK, registers.POP )
+    alu_op(Op.POP, op_1, op_2, None)
+    print('POP:', registers.STACK, registers.POP)
 
-
-    # TEST BRANCHING 
-    branch_op( Op.JMP_if_1, 1, 68, 2 )
-    print('PC', registers.PC )
-    print('INSTR_OFFSET', registers.INSTR_OFFSET )
+    # TEST BRANCHING
+    branch_op(Op.JMP_if_1, 1, 68, 2)
+    print('PC', registers.PC)
+    print('INSTR_OFFSET', registers.INSTR_OFFSET)
 
     # test mem instructions
     mem_status = MemoryState.BUSY
 
     while mem_status == MemoryState.BUSY:
-        mem_status = mem_op( Op.STR_32, 100 )   
-    print( registers.MEMORY.next_layer.mem[ 25 ] )
+        mem_status = mem_op(Op.STR_32, 100)
+    print(registers.MEMORY.next_layer.mem[25])
     while mem_status == MemoryState.BUSY:
-        mem_status = mem_op( Op.LDR_32, 100 )
-    print( registers.PUSH )
+        mem_status = mem_op(Op.LDR_32, 100)
+    print(registers.PUSH)
 
     # test mem read instructions
     mem_status = MemoryState.BUSY
 
     while mem_status == MemoryState.BUSY:
-        mem_status = mem_op( Op.STR_32, 100 )   
-    print( registers.MEMORY.next_layer.mem[ 25 ] )
+        mem_status = mem_op(Op.STR_32, 100)
+    print(registers.MEMORY.next_layer.mem[25])
     while mem_status == MemoryState.BUSY:
-        mem_status = mem_op( Op.LDR_32, 100 )
-    print( registers.PUSH )
-    
+        mem_status = mem_op(Op.LDR_32, 100)
+    print(registers.PUSH)
+
     # test mem read in cache instructions
     mem_status = MemoryState.BUSY
 
     while mem_status == MemoryState.BUSY:
-        mem_status = mem_op( Op.STR_32, 100 )   
-    print( registers.MEMORY.next_layer.mem[ 25 ] )
+        mem_status = mem_op(Op.STR_32, 100)
+    print(registers.MEMORY.next_layer.mem[25])
     while mem_status == MemoryState.BUSY:
-        mem_status = mem_op( Op.LDR_32, 100 )
-    print( registers.PUSH )
-
+        mem_status = mem_op(Op.LDR_32, 100)
+    print(registers.PUSH)
