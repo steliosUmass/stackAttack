@@ -219,12 +219,12 @@ class CryptoExecuter():
             val_1 = operand_1 & 0xFFFFFFFFFFFFFFFF
             val_2 = operand_2 & 0xFFFFFFFFFFFFFFFF
             n = operand_3 & 0xFFFFFFFFFFFFFFFF
-            result_val = (val_1 * val_2) % n
+            result_val = (val_1 + val_2) % n
         elif op == Op.MOD_MUL:
             val_1 = operand_1 & 0xFFFFFFFFFFFFFFFF
             exponent = operand_2 & 0xFFFFFFFF
             n = operand_3 & 0xFFFFFFFFFFFFFFFF
-            result_val = (val_1 ** exponent) % n
+            result_val = (val_1 * exponent) % n
         elif op == Op.MOD_INV:
             val_1 = operand_1 & 0xFFFFFFFFFFFFFFFF
             exponent = operand_2 & 0xFFFFFFFF
@@ -246,7 +246,7 @@ class CryptoExecuter():
                 val_1 = operand_1 & 0xFFFFFFFFFFFFFFFF
                 exponent = operand_2 & 0xFFFFFFFF
                 n = operand_3 & 0xFFFFFFFFFFFFFFFF
-                result_vaL = (val_1 ** exponent) % n
+                result_val = (val_1 * exponent) % n
             self.counter -= 1
         elif op == Op.RSA:
             if self.counter < 0:
