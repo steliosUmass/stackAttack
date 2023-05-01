@@ -49,30 +49,34 @@ class Fetch:
 
             load_data = self.load( self.address )
             # Check if the memory or the decode stage is busy
-            if load_data != MemoryState.BUSY and decode_state != StageState.STALL:
-                
+            if load_data != MemoryState.BUSY:
+                self.reading = False
                 # Set the fetch status to idle
                 self.status = StageState.IDLE
-
-                # Update the PC and the instruction offset, only if not getting squashed!
-                if not self.should_squash:
-                    registers.INSTR_OFFSET = self.offset + 1
-                    registers.PC = self.address + registers.INSTR_OFFSET // self.instr_per_word
-                    registers.INSTR_OFFSET = registers.INSTR_OFFSET % self.instr_per_word
 
                 # Extract the instruction from the load data
                 if isinstance( load_data, list ):
                     load_data = load_data[ self.address % 4 ]
-                load_data_pc_offset = load_data[ self.offset ]
 
                 # set IR buffer
                 self.instr_buff = load_data
-                self.instr_buff_valid = registers.INSTR_OFFSET > 0
-
-                # reset state and return instr object
-                self.issued_instr = { 'instr': load_data_pc_offset, 'squash' : self.should_squash }
-                self.reading = False
-                return self.issued_instr
+                self.instr_buff_valid = True
+                
+                if decode_state != StageState.STALL and should_issue:
+                
+                    # Update the PC and the instruction offset, only if not getting squashed!
+                    if not self.should_squash:
+                        registers.INSTR_OFFSET = self.offset + 1
+                        registers.PC = self.address + registers.INSTR_OFFSET // self.instr_per_word
+                        registers.INSTR_OFFSET = registers.INSTR_OFFSET % self.instr_per_word
+                    
+                    # set IR valid
+                    self.instr_buff_valid = registers.INSTR_OFFSET > 0
+                    
+                    load_data_pc_offset = load_data[ self.offset ]
+                    # reset state and return instr object
+                    self.issued_instr = { 'instr': load_data_pc_offset, 'squash' : self.should_squash }
+                    return self.issued_instr
 
         # If the memory or the decode stage is busy, return Op.NOOP
         self.issued_instr = { 'instr': (45 + (2<<6)), 'squash': self.should_squash }
