@@ -143,11 +143,11 @@ class Memory():
                 if self.next_layer is not None:
                     tag, index = self._calc_index_and_tag(address)
                    
-                    self.num_reads += 1
                     # check if hit
                     if self.valid[ index ] and int.from_bytes( self.tag[index], 'big') == tag: 
                         # hit
                         self.num_hits += 1
+                        self.num_reads += 1
                         self.state = MemoryState.IDLE
                         return copy.deepcopy(self.mem[index])
 
@@ -156,6 +156,7 @@ class Memory():
 
                     # update cache
                     if val != MemoryState.BUSY:
+                        self.num_reads += 1
                         self.valid[index] = True
                         self.tag[index] = tag.to_bytes( ceil( ( 16 - 
                             ( ( len( self.mem ) - 1).bit_length() +  ( self.line_length - 1 ).bit_length() ) ) / 8 ), 'big')
