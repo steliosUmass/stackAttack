@@ -28,15 +28,17 @@ def dissassemble( instr_bytes, symbol_table, base_addr=0 ):
                 # if thats the case, could replace them with a "PUSH_VAL LABEL"
                 pc = None
                 offset = None
-
-                if len( instr_list ) > 0 and instr_list[ -1 ].startswith( 'PUSH_VAL' ) and instr ==  'PUSH_VAL':
-                    pc = literal
-                    val = instr_list[ -1 ].split()[ -1 ]
-                    if val in symbol_table.keys():
-                        offset = symbol_table[ val ]
-                    else:
-                        if instr_list[ -1 ].split()[ -1 ].isdigit():
-                            offset = int( instr_list[ -1 ].split()[ -1 ] )
+                if len( instr_list ) > 0:
+                    prev_instr = instr_list[ -1 ]
+                    if ( len( prev_instr.split() ) > 2 and prev_instr.split()[1].startswith( 'PUSH_VAL' ) 
+                            and instr == 'PUSH_VAL'):
+                        pc = literal
+                        val = instr_list[ -1 ].split()[ -1 ]
+                        if val in symbol_table.keys():
+                            offset = symbol_table[ val ]
+                        else:
+                            if instr_list[ -1 ].split()[ -1 ].isdigit():
+                                offset = int( instr_list[ -1 ].split()[ -1 ] )
                 
                 variable = None
                 label = ''
