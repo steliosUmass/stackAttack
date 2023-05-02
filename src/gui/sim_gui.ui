@@ -165,16 +165,16 @@
             <item>
              <layout class="QVBoxLayout" name="verticalLayout_10">
               <item>
-               <widget class="QPushButton" name="LoadButton">
+               <widget class="QPushButton" name="resetSim">
                 <property name="text">
-                 <string>Load Program</string>
+                 <string>Reset Simulator</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="clearCacheButton">
+               <widget class="QPushButton" name="LoadButton">
                 <property name="text">
-                 <string>Clear Cache</string>
+                 <string>Load Program</string>
                 </property>
                </widget>
               </item>
@@ -228,7 +228,7 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,0,0,1">
+           <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,1,0,1,2">
             <item>
              <widget class="QLabel" name="label_4">
               <property name="text">
@@ -243,6 +243,13 @@
              <widget class="QPushButton" name="addrGo">
               <property name="text">
                <string>Go</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="clearCacheButton">
+              <property name="text">
+               <string>Clear Cache</string>
               </property>
              </widget>
             </item>

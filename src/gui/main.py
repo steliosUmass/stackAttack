@@ -30,9 +30,10 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
 
         # current address that mem should be pointing to
         self.current_mem_addr = 0
+        self.instr_index_offset = 0
         
-        #  add signal to change view of memory
-        self.addrGo.clicked.connect( self.change_addr_view )
+        # add signal to change view of memory
+        self.addrGo.clicked.connect( self.change_addr_view_clicked )
         
         # init combo box to choose between ram and cache
         self.memCombo.addItems( [ 'RAM', 'CACHE'] )
@@ -88,13 +89,42 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         # set button to clear cache
         self.clearCacheButton.clicked.connect( self.clear_cache )
 
+        # add signal to reset sim button
+        self.resetSim.clicked.connect( self.reset_sim )
+
         # set running time info
         hit_percent = 'Cache Hit 0%' 
         running_info = [ f"Cycles: { self.pipeline.cycle }", hit_percent ]
         self.infoListView.setModel( view_models.BasicModel( running_info ) ) 
+       
+        # set instr view
+        self.change_addr_view( )
+
+    def reset_sim( self ):
+        # reset registers
+        registers.MEMORY.clear()
+        registers.MEMORY.next_layer.clear()
+        registers.PC = 0
+        registers.INSTR_OFFSET = 0
+        registers.LINK = 0
+        registers.POP = 0
+        registers.PUSH = 0
+        registers.STACK = registers.Stack( len( registers.STACK.stack ) )
+
+        # clear break points
+        self.breakpoints = []  
+        self.listBreakPoints.clear()
+        self.symbol_table = {}
+
+        # create new pipeline object
+        self.pipeline = PipeLine( self.breakpoints )
+        
+        # update gui
+        self.change_addr_view( )
+        self.update_gui( )
 
     def clear_cache( self ):
-        registers.MEMORY.clear_cache()
+        registers.MEMORY.clear()
         # update memory
         self.index_changed_memCombo( self.memCombo.currentIndex() )
 
@@ -115,8 +145,12 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
                 # add item to breakpoint list
                 self.listBreakPoints.addItem( 'PC: {} OFFSET: {}'.format( line_break[ 0 ], line_break[ 1 ] ) )
 
-    def change_addr_view( self ):
-        self.current_mem_addr = int( self.lineEditAddr.text().strip() )
+
+    def change_addr_view_clicked( self ):
+        self.change_addr_view( int( self.lineEditAddr.text().strip() ) )
+    
+    def change_addr_view( self, addr=None ):
+        self.current_mem_addr = int( addr ) if addr is not None else self.current_mem_addr
         self.index_changed_memCombo( self.memCombo.currentIndex() )
         
         
@@ -131,7 +165,9 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         
         # select instr if shown
         if ( self.current_mem_addr // 4 )  * 16 <= registers.PC * 4 + registers.INSTR_OFFSET < ( self.current_mem_addr // 4 + 1 ) * 16:
-            self.InstrView.setCurrentRow( self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 ) )
+            index = self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 )
+            if index < self.InstrView.count():
+                self.InstrView.setCurrentRow( index )
 
     def update_stack( self ):
         # update stack
@@ -164,7 +200,9 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
 
         # select instr if shown
         if ( self.current_mem_addr // 4 )  * 16 <= registers.PC * 4 + registers.INSTR_OFFSET < ( self.current_mem_addr // 4 + 1 ) * 16:
-            self.InstrView.setCurrentRow( self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 ) )
+            index = self.instr_index_offset +  ( registers.PC * 4 + registers.INSTR_OFFSET ) - ( self.current_mem_addr // 4  * 16 )
+            if index < self.InstrView.count():
+                self.InstrView.setCurrentRow( index )
         else:
             self.InstrView.clearSelection()
 
@@ -247,16 +285,7 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         self.index_changed_memCombo( self.memCombo.currentIndex() )
 
         # print out line of instruction
-        addr = self.current_mem_addr // 4
-        end_addr = addr + 1  if addr + 1 < len( registers.MEMORY.next_layer.mem ) else len( registers.MEMORY.next_layer.mem ) 
-        defs, instrs = dissassemble( b''.join( 
-            [ l for sublist in registers.MEMORY.next_layer.mem[ addr: end_addr ] for l in sublist ] ), self.symbol_table, addr * 16  )
-        spacing =  ['',''] if len( defs ) > 0 else []      
-        self.instr_index_offset = len( spacing ) + len( defs )
-        self.InstrView.addItems( defs + spacing + instrs )
-
-        # select first row
-        self.InstrView.setCurrentRow( self.instr_index_offset )
+        self.change_addr_view()
 
 def main():
     app = QApplication(sys.argv)

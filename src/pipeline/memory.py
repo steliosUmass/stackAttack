@@ -240,11 +240,15 @@ class Memory():
         if self.next_layer is not None:
             self.next_layer.set_cache(cache_on)
 
-    def clear_cache( self ):
-        self.valid = [False] * len( self.mem )
-        self.tag = [ int( 0 ).to_bytes( ceil( ( 16 - 
-            ( ( len( self.mem ) - 1).bit_length() +  ( self.line_length - 1 ).bit_length() ) ) / 8 ), 'big' ) ] *  len( self.mem )
-
+    def clear( self ):
+        if self.next_layer is not None:
+            self.valid = [False] * len( self.mem )
+            self.tag = [ int( 0 ).to_bytes( ceil( ( 16 - 
+                ( ( len( self.mem ) - 1).bit_length() +  ( self.line_length - 1 ).bit_length() ) ) / 8 ), 'big' ) ] *  len( self.mem )
+            self.num_reads = 0
+            self.num_hits = 0
+        
+        self.state = MemoryState.IDLE
         for i in range( len( self.mem ) ):
             line = []
             for _ in range( self.line_length ):
