@@ -33,7 +33,7 @@ class Decode:
             'squash': False
         }
         self.curr_instr = self.new_instr.copy()
-        self.todo_op = {'instr': 46 + 2**7, 'squash': False}
+        self.todo_op = {'instr': 47 + 2**7, 'squash': False}
         self.status = StageState.IDLE
 
     def decode(self):

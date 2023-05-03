@@ -91,6 +91,7 @@ function_map = {
     "AESE" : POP_2,
     "AESD" : POP_2,
     "SHA256" : POP_1,
+    "XOR_BLK": POP_2,
     "DUP_TOP": POP_1,
     "SWAP_TOP": POP_1,
 }

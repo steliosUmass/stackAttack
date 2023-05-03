@@ -58,11 +58,12 @@ class Op(Enum):
     AESE = 43
     AESD = 44
     RAND_BLK = 45
-    SCHNORR_SIG = 46
-    SCHNORR_VER = 47
-    SHA256 = 48
-    NOOP = 49
-    HALT = 50
+    XOR_BLK = 46
+    SCHNORR_SIG = 47
+    SCHNORR_VER = 48
+    SHA256 = 49
+    NOOP = 50
+    HALT = 51
     DUP_TOP = 53
     SWAP_TOP = 54
 
@@ -153,6 +154,8 @@ class AluExecuter():
                                                                      registers.STACK.stack[registers.STACK.top_index - operand_1])
         elif op == Op.GCD:
             result_val = gcd(operand_1, operand_2)
+        elif op == Op.RAND_INT:
+            result_val = random.randint(0, 2*32 - 1)
         elif op == Op.LCM:
             result_val = (abs(operand_1 * operand_2) //
                           gcd(operand_1, operand_2)) & 0xFFFFFFFF
@@ -232,8 +235,14 @@ class CryptoExecuter():
             exponent = operand_2 & 0xFFFFFFFF
             n = operand_3 & 0xFFFFFFFFFFFFFFFF
             result_val = (val_1 ** exponent) % n
-        elif op == Op.RAND:
+        elif op == Op.RAND_GRP:
             result_val = random.randint(0, 2*64 - 1)
+        elif op == Op.RAND_BLK:
+            result_val = random.randint(0, 2*128 - 1)
+        elif op == Op.XOR_BLK:
+            val_1 = operand_1 & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            val_2 = operand_2 & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            result_val = val_1 ^ val_2
         elif op == Op.RABIN:
             if self.counter < 0:
                 self.counter = 10
