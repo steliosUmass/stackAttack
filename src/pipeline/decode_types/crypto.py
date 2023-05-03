@@ -9,6 +9,6 @@ crypto= {
     "AESE": 43,
     "AESD": 44,
     "RAND_BLK": 45,
-    "XOR_BLK": 46
-    "SHA256": 49,
+    "XOR_BLK": 46,
+    "SHA256": 49
 }
