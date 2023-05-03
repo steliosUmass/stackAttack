@@ -3,11 +3,17 @@ import json
 import sys
 import os 
 
+# read mapping of instructions to bytes
+sys.path.insert( 0, os.path.join( os.path.dirname( os.path.dirname(os.path.realpath(__file__)) ), 'src', 'pipeline' ) )
+from instructions import Op
+instr_mapping = {}
+for op in Op:
+    if op.value < 3:
+        instr_mapping[ op.value << 5] = op.name
+    else:
+        instr_mapping[ 2**7 + ( op.value - 3 ) ] = op.name
+
 def dissassemble( instr_bytes, symbol_table, base_addr=0 ):
-    instr_mapping = None
-    with open( os.path.join( os.path.dirname(  os.path.realpath( __file__ ) ), 'instr_mapping.json' ), 'r' ) as f:
-        instr_mapping = { v:k for k, v in json.load( f ).items() }
-  
     defs_used = []
     instr_list = []
     addr = base_addr

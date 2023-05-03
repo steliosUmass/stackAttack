@@ -79,7 +79,7 @@ class Fetch:
                     return self.issued_instr
 
         # If the memory or the decode stage is busy, return Op.NOOP
-        self.issued_instr = { 'instr': (45 + (2<<6)), 'squash': self.should_squash }
+        self.issued_instr = { 'instr': (46 + (2<<6)), 'squash': self.should_squash }
         self.should_issue = should_issue
         return self.issued_instr
 

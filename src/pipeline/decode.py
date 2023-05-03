@@ -4,7 +4,7 @@ from stage_state import StageState
 import registers
 import decode_handler
 
-from decode_types import alu, branch, memory, group
+from decode_types import alu, branch, memory, crypto
 from execute import *
 
 
@@ -16,7 +16,7 @@ class Decode:
         self.alu_op = alu.alu
         self.branch_op = branch.branch
         self.mem_op = memory.memory
-        self.group_op = group.group
+        self.crypto_op = crypto.crypto
         self.function_map = decode_handler.function_map
         self.new_instr = {
             'type': 1,
@@ -29,11 +29,11 @@ class Decode:
             'is_alu': False,
             'is_branch': False,
             'is_mem_access': False,
-            'is_group': False,
+            'is_crypto': False,
             'squash': False
         }
         self.curr_instr = self.new_instr.copy()
-        self.todo_op = {'instr': 45 + 2**7, 'squash': False}
+        self.todo_op = {'instr': 46 + 2**7, 'squash': False}
         self.status = StageState.IDLE
 
     def decode(self):
@@ -60,7 +60,7 @@ class Decode:
                 self.curr_instr['is_branch'] = True
             elif self.curr_instr['Op'].name in self.mem_op.keys():
                 self.curr_instr['is_mem_access'] = True
-            elif self.curr_instr['Op'].name in self.group_op.keys():
+            elif self.curr_instr['Op'].name in self.crypto_op.keys():
                 self.curr_instr['is_group'] = True
 
         # get varibales from stack if not squashed
@@ -89,7 +89,7 @@ class Decode:
         state = ['State: {}'.format(self.status.name), 'Will Squash: {}'.format(
             'Yes' if self.curr_instr['squash'] else 'No')]
 
-        if self.curr_instr['is_alu'] or self.curr_instr['is_group'] :
+        if self.curr_instr['is_alu'] or self.curr_instr['is_crypto'] :
             state.append('instr: OP: {} {} {} {}'.format(self.curr_instr['Op'].name,
                                                          str(
                                                              self.curr_instr['Operand_1']) if self.curr_instr['Operand_1'] != None else '',

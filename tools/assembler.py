@@ -5,9 +5,14 @@ import pickle
 import re
 
 # read mapping of instructions to bytes
-instr_mapping = None
-with open( os.path.join( os.path.dirname(  os.path.realpath( __file__ ) ), 'instr_mapping.json' ), 'r' ) as f:
-        instr_mapping = json.loads( f.read() )
+sys.path.insert( 0, os.path.join( os.path.dirname( os.path.dirname(os.path.realpath(__file__)) ), 'src', 'pipeline' ) )
+from instructions import Op
+instr_mapping = {}
+for op in Op:
+    if op.value < 3:
+        instr_mapping[ op.name ] = op.value << 5
+    else:
+        instr_mapping[ op.name ] = 2**7 + ( op.value - 3 )
 
 def parse_int( val ):
     if isinstance( val, int ): return val
@@ -62,9 +67,6 @@ def main():
     instr_counter = 0
     symbol_table = {}
     instr_bytes = bytearray()
-
-    with open( os.path.join( os.path.dirname(  os.path.realpath( __file__ ) ), 'instr_mapping.json' ), 'r' ) as f:
-        instr_mapping = json.loads( f.read() )
 
     prog_lines = []
     prog_index = 0

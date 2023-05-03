@@ -1,7 +1,7 @@
 alu = {
     "PUSH_VAL": 0,
     "DUP": 2,
-    "SWAP": 3,
+    "SWAP": 1,
     "PUSH": 9,
     "POP": 10,
     "ADD": 16,
@@ -20,9 +20,10 @@ alu = {
     "GT": 29,
     "LT": 30,
     "L_SHIFT": 32,
-    "R_SHIFT": 33,
-    'GCD': 34,
-    'LCM': 35,
+    "R_SHIFT": 31,
+    'GCD': 33,
+    'LCM': 34,
+    'RAND_INT': 35,
     "DUP_TOP": 53,
     "SWAP_TOP": 54,
 }

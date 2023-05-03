@@ -3,9 +3,9 @@ import hashlib
 from memory import Users, MemoryState
 from math import gcd
 from miller_rabin import miller_rabin_deterministic64
-from rsa import rsa_encrypt, rsa_decrypt
-from Crypto.Cipher import AES
-from Crypto.Hash import SHA256
+#from rsa import rsa_encrypt, rsa_decrypt
+#from Crypto.Cipher import AES
+#from Crypto.Hash import SHA256
 from stage_state import StageState
 import registers
 import random
@@ -47,20 +47,22 @@ class Op(Enum):
     L_SHIFT = 32
     GCD = 33
     LCM = 34
-    RAND = 35
-    RABIN = 36
-    MOD_ADD = 37
-    MOD_MUL = 38
-    MOD_INV = 39
-    DH = 40
-    RSA = 41
-    AESE = 42
-    AESD = 43
-    SCHNORR_SIG = 44
-    SCHNORR_VER = 45
-    SHA256 = 46
-    NOOP = 48
-    HALT = 49
+    RAND_INT = 35
+    RAND_GRP = 36
+    RABIN = 37
+    MOD_ADD = 38
+    MOD_MUL = 39
+    MOD_INV = 40
+    DH = 41
+    RSA = 42
+    AESE = 43
+    AESD = 44
+    RAND_BLK = 45
+    SCHNORR_SIG = 46
+    SCHNORR_VER = 47
+    SHA256 = 48
+    NOOP = 49
+    HALT = 50
     DUP_TOP = 53
     SWAP_TOP = 54
 
@@ -212,7 +214,7 @@ class CryptoExecuter():
     def __init__(self):
         self.counter = -1
 
-    def group_op(self, op, operand_1, operand_2, operand_3):
+    def crypto_op(self, op, operand_1, operand_2, operand_3):
         result_val = None
 
         if op == Op.MOD_ADD:

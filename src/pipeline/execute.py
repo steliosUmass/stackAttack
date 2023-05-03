@@ -24,7 +24,7 @@ class ExecuteStage():
             'is_alu': False,
             'is_mem_access': False,
             'is_branch': False,
-            'is_group': False
+            'is_crypto': False
 
         }
         self.status = StageState.IDLE
@@ -67,8 +67,8 @@ class ExecuteStage():
             elif self.curr_instr.get('is_mem_access', False):
                 self.status = self.memory_executer.mem_op(
                     self.curr_instr['Op'], self.curr_instr['Address'])
-            elif self.curr_instr.get( 'is_group', False ):
-                self.status = self.cypto_executer.group_op(
+            elif self.curr_instr.get( 'is_crypto', False ):
+                self.status = self.cypto_executer.crypto_op(
                     self.curr_instr['Op'],
                     self.curr_instr['Operand_1'],
                     self.curr_instr['Operand_2'],
@@ -104,7 +104,7 @@ class ExecuteStage():
         state = ['Status: {}'.format(self.status.name), 'Will Send Squash: {}'.format(
             'Yes' if self.squash else 'No')]
 
-        if self.last_executed['is_alu'] or self.last_executed['is_group'] :
+        if self.last_executed['is_alu'] or self.last_executed['is_crypto'] :
             state.append('instr: OP: {} {} {} {}'.format(self.last_executed['Op'].name,
                                                          str(
                                                              self.last_executed['Operand_1']) if self.last_executed['Operand_1'] != None else '',
