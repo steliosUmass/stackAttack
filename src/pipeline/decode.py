@@ -61,7 +61,7 @@ class Decode:
             elif self.curr_instr['Op'].name in self.mem_op.keys():
                 self.curr_instr['is_mem_access'] = True
             elif self.curr_instr['Op'].name in self.crypto_op.keys():
-                self.curr_instr['is_group'] = True
+                self.curr_instr['is_crypto'] = True
 
         # get varibales from stack if not squashed
         if not self.todo_op['squash'] and self.curr_instr['Op'].name in decode_handler.function_map:
