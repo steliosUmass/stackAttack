@@ -151,6 +151,7 @@ def main():
 
     num_pc_bits = {}
     ops_needed_for_push = {}
+    
     # now, expand the values being pushed
     for label,_ in label_definitons:
         num_pc_bits[ label ] = 5
@@ -182,11 +183,11 @@ def main():
                         # continue since the added operations won't effect the label def
                         if addr != addr_ref:
                             continue
-                        if ref < symbol_table[ label_2 ][ 0 ] * 4 + symbol_table[ label_2 ][ 1 ]:
+                        if addr_ref * 4 + ref < symbol_table[ label_2 ][ 0 ] * 4 + symbol_table[ label_2 ][ 1 ]:
                             operations_before += 1
                             
                     # for each label def, add the number of additonal ops * operations_before to get new address
-                    addr_label_2 = symbol_table[ label_2 ][ 0 ] * 4 + symbol_table[ label_2 ][ 1 ]
+                    addr_label_2 = symbol_table[ label_2 ][ 0 ]*4 + symbol_table[ label_2 ][ 1 ]
                     symbol_table[ label_2 ] = ( (  addr_label_2 + operations_before * ops_needed_for_push[ label ] ) // 4, 
                             ( addr_label_2 + operations_before * ops_needed_for_push[ label ] ) % 4 )
     prog_dict = {}
