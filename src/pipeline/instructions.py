@@ -272,8 +272,8 @@ class CryptoExecuter():
             if self.counter < 0:
                 self.counter = 15
             elif self.counter == 0:
-                message = operand_1 & 0xFFFFFFFFFFFFFFFF
-                key = operand_2 & 0xFFFFFFFFFFFFFFFF
+                message = operand_1 & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                key = operand_2 & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
                 result_val = int.from_bytes( AES.new(key.to_bytes(16, 'big'), AES.MODE_ECB).encrypt(
                     message.to_bytes(16, 'big')), 'big' )
             self.counter -= 1
@@ -281,8 +281,8 @@ class CryptoExecuter():
             if self.counter < 0:
                 self.counter = 15
             elif self.counter == 0:
-                message = operand_1 & 0xFFFFFFFFFFFFFFFF
-                key = operand_2 & 0xFFFFFFFFFFFFFFFF
+                message = operand_1 & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                key = operand_2 & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
                 result_val = int.from_bytes( AES.new(key.to_bytes(16, 'big'), AES.MODE_ECB).decrypt(
                     message.to_bytes(16, 'big')), 'big' )
             self.counter -= 1

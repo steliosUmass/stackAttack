@@ -36,7 +36,7 @@ PUSH_VAL MESSAGE_LENGTH
 # push message location
 PUSH_VAL MESSAGE_LOC
 
-# call encryption function
+# call decryption function
 PUSH_VAL AES_CBC_DEC
 SR
 HALT
@@ -57,6 +57,8 @@ RAND_BLK
 
 # read current block
 LOOP_ENC: DUP 1
+PUSH_VAL 4
+MUL
 DUP 3
 ADD
 DUP 0
@@ -89,12 +91,14 @@ SWAP 1
 PUSH_VAL LOOP_ENC
 DUP 3
 DUP 6
-EQ
+LT
 JMP_IF_0
 
 # now we need to save the final block
 POP
-ADD 
+PUSH_VAL 4
+MUL
+ADD
 STR_128
 
 # pop length and key
@@ -105,7 +109,7 @@ RET
 
 FUNC AES_CBC_DEC
 # get IV 
-DUP 1
+DUP 0
 LDR_128
 PUSH
 
@@ -114,6 +118,8 @@ PUSH_VAL 1
 
 # get block at i location and push two copies
 LOOP_DEC: DUP 0
+PUSH_VAL 4
+MUL
 DUP 3
 ADD
 LDR_128
@@ -135,15 +141,19 @@ POP
 DUP 0
 PUSH_VAL 1
 SUB
+PUSH_VAL 4
+MUL
 DUP 3
 ADD
 STR_128
 
-# incerment i and see if it is equal to message length + 1
+# incerment i and see if it is equal to message length + 2
+PUSH_VAL 1
+ADD
 PUSH_VAL LOOP_DEC
 DUP 2
 DUP 6
-PUSH_VAL 1
+PUSH_VAL 2
 ADD
 EQ
 JMP_IF_0
