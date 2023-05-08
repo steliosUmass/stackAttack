@@ -37,9 +37,6 @@ class RamModel( QtCore.QAbstractTableModel ):
                         # print '.' char
                         b.append( 46  )
                 return b.decode("ascii")
-        elif role == Qt.BackgroundRole:
-            if index.row() * 4 + index.column() == registers.PC:
-                return QtGui.QColor.fromRgb( 255, 255, 224, alpha=.8 )
 
     def rowCount(self, index):
         # The length of the outer list.
