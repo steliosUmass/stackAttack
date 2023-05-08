@@ -1,0 +1,138 @@
+.VAR MATRIX_1_DIM 5
+.VAR SHARED_DIM 20
+.VAR MATRIX_2_DIM 3
+
+.VAR MATRIX_1_LOC 100
+.VAR MATRIX_2_LOC 500
+.VAR MATRIX_3_LOC 1000
+
+# push i
+PUSH_VAL 0
+#push j
+LOOP_1: PUSH_VAL 0
+# push k
+LOOP_2: PUSH_VAL 0
+# init sum variable
+PUSH_VAL 0
+
+# get MATRIX_1[ i ][ k ]
+# getting row here
+LOOP_3: DUP 3
+PUSH_VAL SHARED_DIM
+MUL
+# get offset in row
+DUP 2
+ADD
+# add to base addr
+PUSH_VAL MATRIX_1_LOC
+ADD
+LDR_32
+PUSH
+
+# get MATRIX_2[ k ][ j ]
+# getting row here
+DUP 2
+PUSH_VAL MATRIX_2_DIM
+MUL
+
+# get offset in row
+DUP 4
+ADD
+
+# add to base addr
+PUSH_VAL MATRIX_2_LOC
+ADD
+
+# get value
+LDR_32
+PUSH
+
+# multiply values
+MUL
+
+# add to sum
+ADD
+
+# increment k
+SWAP 1
+PUSH_VAL 1
+ADD
+SWAP 1
+
+# check if k < SHARED_DIM
+PUSH_VAL LOOP_3
+DUP 3
+PUSH_VAL SHARED_DIM
+GT
+JMP_IF_1
+
+# pop k
+SWAP 1
+POP
+
+# save sum to MATRIX_3
+PUSH_VAL MATRIX_3_LOC 
+DUP 3
+PUSH_VAL MATRIX_2_DIM
+MUL
+DUP 3
+ADD
+ADD
+SWAP 1
+POP
+STR_32
+
+# increment j and check if j < MATRIX_2_DIM
+PUSH_VAL 1
+ADD
+PUSH_VAL LOOP_2
+DUP 2
+PUSH_VAL MATRIX_2_DIM
+GT
+JMP_IF_1
+
+# pop j
+POP
+
+# increment i and check if i < MATRIX_i_DIM
+PUSH_VAL 1
+ADD
+PUSH_VAL LOOP_1
+DUP 2
+PUSH_VAL MATRIX_1_DIM
+GT
+JMP_IF_1
+
+# pop i
+POP
+
+HALT
+
+.ADDR MATRIX_1_LOC
+.LOAD 17  26  90  32  70  17  78  94  35 100  72  41  85 33  27  98   9  64  61  60
+.LOAD 34  34  67  76  77  17  42  40  61  32  46  31  67 21  77   4  60  99  33  38
+.LOAD 96  44  59  38  62  52  52   4  20   0  20  76  36 45  15  59  12  26  74  27
+.LOAD 100   0  27  59  13  59  77  81  52  77  60  44  36 65  46   6   9  78  94  43
+.LOAD 86  44  21  43  99  55   3  15  43  73  51  35  56 50  90  89  79  45   5  37 
+
+.ADDR MATRIX_2_LOC
+.LOAD 70  36  53
+.LOAD 35  66  10
+.LOAD 43   6  82
+.LOAD 100  27  50
+.LOAD 79  58  65
+.LOAD 77  23  43
+.LOAD 70  88  98
+.LOAD 8  89  95
+.LOAD 61  93  41
+.LOAD 77  16  80
+.LOAD 100   5  97
+.LOAD 32   3  41
+.LOAD 45  50  84
+.LOAD 33  58  16
+.LOAD 26  79  49
+.LOAD 66  14  62
+.LOAD 25   7  70
+.LOAD 94  32  87
+.LOAD 87  96  20
+.LOAD 37  64  83
