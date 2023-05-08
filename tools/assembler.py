@@ -107,7 +107,6 @@ def main():
                instr = line_split[1]
                symbol_table[ instr ] = ( addr + prog_index // 4, prog_index % 4 )
                label_definitons.append( ( instr, addr ) )
-               prog_index += 1
             else:
                 if instr not in instr_mapping.keys() and '.' != instr[ 0 ]:
                     # label definition found here
@@ -151,7 +150,6 @@ def main():
 
     num_pc_bits = {}
     ops_needed_for_push = {}
-    
     # now, expand the values being pushed
     for label,_ in label_definitons:
         num_pc_bits[ label ] = 5
