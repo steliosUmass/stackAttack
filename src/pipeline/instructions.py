@@ -4,8 +4,8 @@ from memory import Users, MemoryState
 from math import gcd
 from miller_rabin import miller_rabin_deterministic64
 #from rsa import rsa_encrypt, rsa_decrypt
-#from Crypto.Cipher import AES
-#from Crypto.Hash import SHA256
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
 from stage_state import StageState
 import registers
 import random
@@ -274,8 +274,8 @@ class CryptoExecuter():
             elif self.counter == 0:
                 message = operand_1 & 0xFFFFFFFFFFFFFFFF
                 key = operand_2 & 0xFFFFFFFFFFFFFFFF
-                result_val = AES.new(key.to_bytes(16, 'big'), AES.MODE_ECB).encrypt(
-                    message.to_bytes(16, 'big'))
+                result_val = int.from_bytes( AES.new(key.to_bytes(16, 'big'), AES.MODE_ECB).encrypt(
+                    message.to_bytes(16, 'big')), 'big' )
             self.counter -= 1
         elif op == Op.AESD:
             if self.counter < 0:
@@ -283,8 +283,8 @@ class CryptoExecuter():
             elif self.counter == 0:
                 message = operand_1 & 0xFFFFFFFFFFFFFFFF
                 key = operand_2 & 0xFFFFFFFFFFFFFFFF
-                result_val = AES.new(key.to_bytes(16, 'big'), AES.MODE_ECB).decrypt(
-                    message.to_bytes(16, 'big'))
+                result_val = int.from_bytes( AES.new(key.to_bytes(16, 'big'), AES.MODE_ECB).decrypt(
+                    message.to_bytes(16, 'big')), 'big' )
             self.counter -= 1
         elif op == Op.SHA256:
             if self.counter < 0:
