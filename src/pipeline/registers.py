@@ -60,8 +60,8 @@ PUSH = 0
 LINK = 0
 INSTR_OFFSET = 0
 STACK = Stack(32)
-MEMORY = Memory(16, response_cycles=0, next_layer=Memory(
-    32000 // 4, response_cycles=3))
+MEMORY = Memory(16, response_cycles=3, next_layer=Memory(
+    32000 // 4, response_cycles=100))
 
 # if __name__ == '__main__':
 #     # set push reg to 156

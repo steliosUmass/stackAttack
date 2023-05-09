@@ -17,6 +17,7 @@ class Fetch:
         self.reading = False
         self.instr_per_word = 4
         self.should_issue = True
+        self.inst_issued = 0
     def load(self, address):
         # When the address is not in the cache it will return BUSY and stall the pipeline
         # else it will return the data and continue the pipeline
@@ -74,6 +75,7 @@ class Fetch:
                     self.instr_buff_valid = registers.INSTR_OFFSET > 0
                     
                     load_data_pc_offset = load_data[ self.offset ]
+                    self.inst_issued += 1
                     # reset state and return instr object
                     self.issued_instr = { 'instr': load_data_pc_offset, 'squash' : self.should_squash }
                     return self.issued_instr

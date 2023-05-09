@@ -33,6 +33,11 @@ class ExecuteStage():
         self.memory_executer = instructions.MemoryExecuter()
         self.cypto_executer = instructions.CryptoExecuter()
         self.last_executed = self.curr_instr
+        self.no_op_instr = 0
+        self.alu_instr = 0
+        self.branch_instr = 0
+        self.crypto_instr = 0
+        self.mem_instr = 0
 
     def execute_back_pass(self):
         '''
@@ -56,6 +61,7 @@ class ExecuteStage():
 
             # instruction is a branch
             if self.curr_instr.get('is_branch', False):
+                self.branch_instr += 1
                 self.squash = self.alu_executer.branch_op(
                     self.curr_instr['Op'],
                     self.curr_instr['Condition'],
@@ -65,9 +71,11 @@ class ExecuteStage():
 
             # instruction is a memory access
             elif self.curr_instr.get('is_mem_access', False):
+                self.mem_instr += 1
                 self.status = self.memory_executer.mem_op(
                     self.curr_instr['Op'], self.curr_instr['Address'])
             elif self.curr_instr.get( 'is_crypto', False ):
+                self.crypto_instr += 1 
                 self.status = self.cypto_executer.crypto_op(
                     self.curr_instr['Op'],
                     self.curr_instr['Operand_1'],
@@ -77,6 +85,10 @@ class ExecuteStage():
 
             # else, instruction is ALU operation
             else:
+                if self.curr_instr['Op'] == instructions.Op.NOOP:
+                    self.no_op_instr += 1
+                else:
+                    self.alu_instr += 1
                 self.alu_executer.alu_op(
                     self.curr_instr['Op'],
                     self.curr_instr['Operand_1'],

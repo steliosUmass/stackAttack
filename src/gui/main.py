@@ -94,7 +94,23 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
 
         # set running time info
         hit_percent = 'Cache Hit 0%' 
-        running_info = [ f"Cycles: { self.pipeline.cycle }", hit_percent ]
+        no_op_percent = 'NOOP 0%'
+        alu_percent = 'ALU 0%'
+        mem_percent = 'MEMORY 0%'
+        crypto_percent = 'CRYPTO 0%'
+        branch_percent = 'BRANCH 0%'
+        
+        running_info = [ 
+                f"Cycles: { self.pipeline.cycle }",
+                f"Instr Issued { self.pipeline.fetch.inst_issued }",
+                hit_percent,
+                no_op_percent,
+                alu_percent,
+                branch_percent,
+                crypto_percent,
+                mem_percent
+            ]
+
         self.infoListView.setModel( view_models.BasicModel( running_info ) ) 
        
         # set instr view
@@ -195,7 +211,28 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
         # set running time info
         hit_percent = ( 'Cache Hit 0%' if registers.MEMORY.num_reads == 0 
             else f"Cache Hit { registers.MEMORY.num_hits / registers.MEMORY.num_reads * 100:.2f}%" )
-        running_info = [ f"Cycles: { self.pipeline.cycle }", hit_percent ]
+        no_op_percent = ( 'NOOP 0%' if self.pipeline.cycle == 0 
+            else f"NOOP { self.pipeline.execute.no_op_instr / self.pipeline.cycle * 100:.2f}%" )
+        alu_percent = ( 'ALU 0%' if self.pipeline.cycle == 0 
+            else f"ALU { self.pipeline.execute.alu_instr / self.pipeline.cycle * 100:.2f}%" )
+        mem_percent = ( 'MEMORY 0%' if self.pipeline.cycle == 0 
+            else f"MEMORY { self.pipeline.execute.mem_instr / self.pipeline.cycle * 100:.2f}%" )
+        crypto_percent = ( 'CRYPTO 0%' if self.pipeline.cycle == 0 
+            else f"CRYPTO { self.pipeline.execute.crypto_instr / self.pipeline.cycle * 100:.2f}%" )
+        branch_percent = ( 'BRANCH 0%' if self.pipeline.cycle == 0 
+            else f"BRANCH { self.pipeline.execute.branch_instr / self.pipeline.cycle * 100:.2f}%" )
+
+        running_info = [ 
+                f"Cycles: { self.pipeline.cycle }",
+                f"Instr Issued { self.pipeline.fetch.inst_issued }",
+                hit_percent,
+                no_op_percent,
+                alu_percent,
+                branch_percent,
+                crypto_percent,
+                mem_percent
+            ]
+
         self.infoListView.setModel( view_models.BasicModel( running_info ) ) 
 
 
