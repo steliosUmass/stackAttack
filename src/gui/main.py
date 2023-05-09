@@ -118,7 +118,8 @@ class Simulator(QtWidgets.QMainWindow, sim_gui.Ui_simulator):
 
         # create new pipeline object
         self.pipeline = PipeLine( self.breakpoints )
-        
+        self.set_pipeline_enable( self.pipeOn.checkState() )
+
         # update gui
         self.change_addr_view( )
         self.update_gui( )
