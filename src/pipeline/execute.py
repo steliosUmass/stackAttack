@@ -113,8 +113,10 @@ class ExecuteStage():
             self.curr_instr = instr
 
     def get_state(self):
-        state = ['Status: {}'.format(self.status.name), 'Will Send Squash: {}'.format(
-            'Yes' if self.squash else 'No')]
+        state = ['Status: {}'.format(self.status.name),
+            'Will Squash: {}'.format( 'Yes' if self.last_executed.get( 'squash', False ) else 'No' ),
+            'Will Send Squash: {}'.format( 'Yes' if self.squash else 'No')
+        ]
 
         if self.last_executed['is_alu'] or self.last_executed['is_crypto'] :
             state.append('instr: OP: {} {} {} {}'.format(self.last_executed['Op'].name,
